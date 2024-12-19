@@ -94,25 +94,25 @@ body {
 }
 
 .font-honyaji {
-  font-family: 'HonyaJi-Re', serif;
+  font-family: var(--font-honya-ji);
 }
 
 .font-masa {
-  font-family: 'MasaFont-Regular', serif;
+  font-family: var(--font-masa);
 }
 
 .font-jason2 {
-  font-family: 'JasonHandwriting2-Medium', serif;
+  font-family: var(--font-jason2);
 }
 
 .font-jason5p {
-  font-family: 'JasonHandwriting5p-Medium', serif;
+  font-family: var(--font-jason5p);
 }
 
 .font-kurewa {
-  font-family: 'KurewaGothicCjkTc-Bold', serif;
+  font-family: var(--font-kurewa);
 }
 
 .font-dingliehakkafont {
-  font-family: 'dingliehakkafont', serif;
+  font-family: var(--font-dingliehakka);
 }

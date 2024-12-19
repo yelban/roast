@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     root: process.env.BASE_PATH || '',
   },
 
-  serverExternalPackages: ['subset-font', '@pdf-lib/fontkit'],
+  serverExternalPackages: [],
 
   webpack: (config, { dev, isServer }) => {
     // 只在客戶端構建中啟用 WebAssembly
@@ -40,6 +40,15 @@ const nextConfig: NextConfig = {
         cacheDirectory: path.resolve(__dirname, '.next/cache'),
       }
     }
+
+    // 處理字體檔案
+    config.module.rules.push({
+      test: /\.(ttf|woff|woff2)$/,
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/fonts/[hash][ext]'
+      }
+    })
 
     return config;
   },
@@ -79,6 +88,10 @@ const nextConfig: NextConfig = {
             key: 'Access-Control-Allow-Headers',
             value: 'Content-Type',
           },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
         ],
       },
     ]

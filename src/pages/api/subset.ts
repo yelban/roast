@@ -1,7 +1,7 @@
 // src/pages/api/fonts/subset.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
 import * as fs from 'fs/promises'
-import * as path from 'path'
+import path from 'path'
 import subsetFont from 'subset-font'
 
 export default async function handler(
@@ -29,27 +29,17 @@ export default async function handler(
       })
     }
 
-    // 修改為使用 /tmp 目錄
-    const tmpDir = '/tmp'
-    const subsetsDir = path.join(tmpDir, 'fonts', 'subsets')
-    const cssDir = path.join(tmpDir, 'fonts', 'css')
-
-    // 確保目錄存在
-    await fs.mkdir(path.join(tmpDir, 'fonts'), { recursive: true })
-    await fs.mkdir(subsetsDir, { recursive: true })
-    await fs.mkdir(cssDir, { recursive: true })
-
-    // 讀取原始字體檔案
+    // 直接從 public 目錄讀取字體檔案
     const fontPath = path.join(process.cwd(), 'public', 'fonts', `${fontFamily}.ttf`)
     const fontBuffer = await fs.readFile(fontPath)
 
     // 生成子集
     const subsetBuffer = await subsetFont(fontBuffer, chars)
 
-    // 使用記憶體中的 Buffer 直接回傳
+    // 直接回傳 base64 編碼的字體檔案
     const base64Font = subsetBuffer.toString('base64')
     
-    // 生成內嵌的 CSS
+    // 生成 CSS
     const cssContent = `@font-face {
       font-family: '${fontFamily}';
       src: url(data:font/truetype;charset=utf-8;base64,${base64Font}) format('truetype');
@@ -58,7 +48,7 @@ export default async function handler(
       font-display: block;
     }`
 
-    // 直接回傳 CSS 內容
+    // 設定快取標頭
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
     return res.status(200).json({
       css: cssContent,
