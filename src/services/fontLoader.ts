@@ -75,7 +75,7 @@ export class FontService {
     if (newChars.length === 0) return
 
     // 將新字符分組（例如每 100 個字符一組）
-    const charGroups = this.groupCharacters(newChars, 250)
+    const charGroups = this.groupCharacters(newChars, 750)
     console.log('charGroups', charGroups)
 
     // 依序載入每組字符
@@ -98,7 +98,22 @@ export class FontService {
     return groups
   }
 
+  private readonly CACHE_VERSION = 'v1'
+
+  private getCacheKey(chars: string[]): string {
+    return `font-${this.CACHE_VERSION}-${this.fontFamily}-${chars.join('')}`
+  }
+
   private async loadFontSubset(chars: string[]): Promise<void> {
+    const cacheKey = this.getCacheKey(chars)
+    
+    // 先檢查 LocalStorage 快取
+    const cachedCSS = localStorage.getItem(cacheKey)
+    if (cachedCSS) {
+      await this.injectCSS(cachedCSS)
+      return
+    }
+
     try {
       const { publicRuntimeConfig } = getConfig()
       const basePath = publicRuntimeConfig.root || ''
@@ -119,13 +134,14 @@ export class FontService {
         return
       }
 
-      // 直接注入 CSS 內容
+      // 儲存到 LocalStorage
+      localStorage.setItem(cacheKey, data.css)
+      
+      // 注入 CSS
       await this.injectCSS(data.css)
-
-      const fontFaceSet = await document.fonts.load(`1em "${this.fontFamily}"`)
       this.fontLoaded = true
     } catch (error) {
-      console.error('字體子集載入失敗 :', error)
+      console.error('字體子集載入失敗:', error)
       throw error
     }
   }

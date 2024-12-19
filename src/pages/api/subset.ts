@@ -59,6 +59,7 @@ export default async function handler(
     }`
 
     // 直接回傳 CSS 內容
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
     return res.status(200).json({
       css: cssContent,
       fallback: false
