@@ -99,14 +99,9 @@ export class FontService {
   }
 
   private async loadFontSubset(chars: string[]): Promise<void> {
-    console.log('loadFontSubset')
-
     try {
-      // 使用 ES 模組語法
       const { publicRuntimeConfig } = getConfig()
       const basePath = publicRuntimeConfig.root || ''
-
-      console.log('basePath', basePath)
 
       const response = await fetch(`${basePath}/api/subset`, {
         method: 'POST',
@@ -117,46 +112,35 @@ export class FontService {
         }),
       })
 
-      console.log('response', response)
-
       const data = await response.json()
-      console.log('API 回應:', data)
 
       if (data.fallback) {
         console.warn('使用備用字體:', data.error || '未知原因')
         return
       }
 
-      if (!data.cssUrl) {
-        throw new Error('無效的 CSS URL')
-      }
-
-      await this.injectCSS(data.cssUrl)
-      // console.log('CSS 已注入:', data.cssUrl)
+      // 直接注入 CSS 內容
+      await this.injectCSS(data.css)
 
       const fontFaceSet = await document.fonts.load(`1em "${this.fontFamily}"`)
-      // console.log('字體載入狀態:', fontFaceSet.length > 0 ? '成功' : '失敗')
-
       this.fontLoaded = true
-
-      // 強制觸發重繪
-      // document.body.style.visibility = document.body.style.visibility
     } catch (error) {
       console.error('字體子集載入失敗 :', error)
       throw error
     }
   }
 
-  private async injectCSS(cssUrl: string): Promise<void> {
+  private async injectCSS(cssContent: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const link = document.createElement('link')
-      link.rel = 'stylesheet'
-      link.href = cssUrl
-      // 修改這裡：添加 crossOrigin 屬性
-      link.crossOrigin = 'anonymous'
-      link.onload = () => resolve()
-      link.onerror = () => reject(new Error('Failed to load font CSS'))
-      document.head.appendChild(link)
+      try {
+        // 創建 style 元素
+        const style = document.createElement('style')
+        style.textContent = cssContent
+        document.head.appendChild(style)
+        resolve()
+      } catch (error) {
+        reject(new Error('Failed to inject font CSS'))
+      }
     })
   }
 
