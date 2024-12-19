@@ -1,14 +1,87 @@
 import type { NextConfig } from "next";
+import path from 'path';
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  reactStrictMode: true,
-  webpack: (config) => {
+  // 開啟 React 嚴格模式
+  reactStrictMode: false,
+
+  // 部署相關配置
+  assetPrefix: process.env.BASE_PATH || '',
+  basePath: process.env.BASE_PATH || '',
+  trailingSlash: true,
+  publicRuntimeConfig: {
+    root: process.env.BASE_PATH || '',
+  },
+
+  serverExternalPackages: ['subset-font', '@pdf-lib/fontkit'],
+
+  webpack: (config, { dev, isServer }) => {
+    // 只在客戶端構建中啟用 WebAssembly
+    if (!isServer) {
+      config.experiments = {
+        ...config.experiments,
+        asyncWebAssembly: true,
+      }
+    }
+
+    // 修改 WebAssembly 模組規則
     config.module.rules.push({
-      test: /\.json$/,
-      type: 'json',
-    })
-    return config
+      test: /\.wasm$/,
+      type: "webassembly/async",
+    });
+
+    // 只在生產環境的客戶端構建中啟用檔案系統快取
+    if (!dev && !isServer) {
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
+        },
+        cacheDirectory: path.resolve(__dirname, '.next/cache'),
+      }
+    }
+
+    return config;
+  },
+
+  // 添加 CORS 標頭
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type',
+          },
+        ],
+      },
+      {
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type',
+          },
+        ],
+      },
+    ]
   },
 };
 

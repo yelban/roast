@@ -92,3 +92,27 @@ body {
 [data-theme='dark'] .dialog-content {
   background-color: #1f2937 !important;
 }
+
+.font-honyaji {
+  font-family: 'HonyaJi-Re', serif;
+}
+
+.font-masa {
+  font-family: 'MasaFont-Regular', serif;
+}
+
+.font-jason2 {
+  font-family: 'JasonHandwriting2-Medium', serif;
+}
+
+.font-jason5p {
+  font-family: 'JasonHandwriting5p-Medium', serif;
+}
+
+.font-kurewa {
+  font-family: 'KurewaGothicCjkTc-Bold', serif;
+}
+
+.font-dingliehakkafont {
+  font-family: 'dingliehakkafont', serif;
+}

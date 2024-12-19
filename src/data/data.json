@@ -299,8 +299,8 @@
       },
       {
         "name": {
-          "zh-tw": "豬䳾",
-          "zh-cn": "猪䳾",
+          "zh-tw": "豬腳",
+          "zh-cn": "猪脚",
           "en": "Pigs Feet",
           "ja": "豚足"
         },
@@ -313,7 +313,7 @@
           "en": "Seasonal Vegetables",
           "ja": "季節の焼野菜"
         },
-        "price": "600~"
+        "price": "600"
       }
     ]
   },
@@ -369,10 +369,16 @@
           "en": "Comguk",
           "ja": "コムタン"
         },
-        "price": {
-          "normal": 1500,
-          "half": 1050
-        }
+        "price": 1500
+      },
+      {
+        "name": {
+          "zh-tw": "牛尾湯飯（半份）",
+          "zh-cn": "牛尾汤饭（半份）",
+          "en": "Comguk (Half)",
+          "ja": "コムタン（半分）"
+        },
+        "price": 1050
       },
       {
         "name": {
@@ -381,10 +387,16 @@
           "en": "Galbi Gukbap Korean Rice Soup",
           "ja": "カルビクッパ"
         },
-        "price": {
-          "normal": 1450,
-          "half": 1000
-        }
+        "price": 1450
+      },
+      {
+        "name": {
+          "zh-tw": "韓式牛五花湯泡飯（半份）",
+          "zh-cn": "韩式牛五花汤泡饭（半份）",
+          "en": "Galbi Gukbap Korean Rice Soup (Half)",
+          "ja": "カルビクッパ（半分）"
+        },
+        "price": 1000
       },
       {
         "name": {
@@ -393,10 +405,16 @@
           "en": "Gukbap Korean Rice Soup",
           "ja": "クッパ"
         },
-        "price": {
-          "normal": 750,
-          "half": 650
-        }
+        "price": 750
+      },
+      {
+        "name": {
+          "zh-tw": "韓式湯泡飯（半份）",
+          "zh-cn": "韩式汤泡饭（半份）",
+          "en": "Gukbap Korean Rice Soup (Half)",
+          "ja": "クッパ（半分）"
+        },
+        "price": 650
       },
       {
         "name": {
@@ -405,10 +423,16 @@
           "en": "Gukbap Korean Rice Soup (with Laver)",
           "ja": "のりクッパ"
         },
-        "price": {
-          "normal": 900,
-          "half": 700
-        }
+        "price": 900
+      },
+      {
+        "name": {
+          "zh-tw": "海苔湯泡飯（半份）",
+          "zh-cn": "海苔汤泡饭（半份）",
+          "en": "Gukbap Korean Rice Soup (with Laver) (Half)",
+          "ja": "のりクッパ（半分）"
+        },
+        "price": 700
       },
       {
         "name": {
@@ -417,10 +441,16 @@
           "en": "Gukbap Korean Rice Soup (with Wake seaweed)",
           "ja": "わかめクッパ"
         },
-        "price": {
-          "normal": 800,
-          "half": 650
-        }
+        "price": 800
+      },
+      {
+        "name": {
+          "zh-tw": "海帶芽湯泡飯（半份）",
+          "zh-cn": "海带芽汤泡饭（半份）",
+          "en": "Gukbap Korean Rice Soup (with Wake seaweed) (Half)",
+          "ja": "わかめクッパ（半分）"
+        },
+        "price": 650
       },
       {
         "name": {
@@ -440,10 +470,16 @@
           "en": "Rice",
           "ja": "ライス"
         },
-        "price": {
-          "normal": 400,
-          "half": 350
-        }
+        "price": 400
+      },
+      {
+        "name": {
+          "zh-tw": "白飯（半份）",
+          "zh-cn": "白饭（半份）",
+          "en": "Rice (Half)",
+          "ja": "ライス（半分）"
+        },
+        "price": 350
       },
       {
         "name": {
@@ -624,9 +660,9 @@
       {
         "name": {
           "en": "Homemade Dumplings",
-          "zh-tw": "手工冷凍餃子(十個)",
-          "zh-cn": "手工冷冻饺子(十个)",
-          "ja": "手作り冷凍餃子（十個）"
+          "zh-tw": "手工冷凍餃子（10個）",
+          "zh-cn": "手工冷冻饺子（10个）",
+          "ja": "手作り冷凍餃子（10個）"
         },
         "price": 600
       },

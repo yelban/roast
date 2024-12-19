@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import Menu from '@/components/Menu'
 import Seo from '@/components/Seo'
 import { Language } from '@/types/menu'
 import Image from 'next/image'
+import { useLanguageStore } from '@/store/languageStore'
 
 const getMetadata = (language: Language) => {
   switch (language) {
@@ -34,7 +35,7 @@ const getMetadata = (language: Language) => {
 }
 
 export default function Home() {
-  const [language, setLanguage] = useState<Language>('en')
+  const { language, setLanguage } = useLanguageStore()
 
   useEffect(() => {
     // 取得瀏覽器語言設定
@@ -52,7 +53,7 @@ export default function Home() {
     } else {
       setLanguage('en')
     }
-  }, [])
+  }, [setLanguage])
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang)
@@ -76,7 +77,7 @@ export default function Home() {
                 priority
               />
             </div>
-            <div className="space-x-1">
+            <div className="space-x-1 text-sm">
               <button
                 onClick={() => handleLanguageChange('ja')}
                 className={`px-1 py-1 rounded ${language === 'ja' ? 'bg-white text-gray-800' : ''}`}
@@ -105,7 +106,7 @@ export default function Home() {
           </div>
         </header>
         <main>
-          <Menu language={language} />
+          <Menu />
         </main>
       </div>
     </>
