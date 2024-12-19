@@ -7,53 +7,56 @@ export class FontService {
   private fontFamily: string
   private fontLoaded: boolean = false
   private static preloadedFonts = new Set<string>()
-
-  // 修改常用字元的定義
-  private static COMMON_CHARS: string = ''
-  private static commonCharsPromise: Promise<string> | null = null
+  
+  // 將 commonCharsPromise 改為實例屬性
+  private commonCharsPromise: Promise<string> | null = null
+  
+  // 定義需要從 API 獲取文字的字體清單
+  private static readonly FONTS_NEEDING_MENU_TEXT = ['HonyaJi-Re', 'KurewaGothicCjkTc-Bold', 'JasonHandwriting2-Medium', 'JasonHandwriting5p-Medium']
 
   constructor(fontFamily: string) {
     this.fontFamily = fontFamily
   }
 
-  // 新增獲取常用字元的方法
-  private static async getCommonChars(): Promise<string> {
+  // 改為實例方法
+  private async getCommonChars(): Promise<string> {
     if (!this.commonCharsPromise) {
       this.commonCharsPromise = (async () => {
         try {
-          // 使用 ES 模組語法
-          const { publicRuntimeConfig } = getConfig()
-          const basePath = publicRuntimeConfig.root || ''
+          let extractedChars = ''
           
-          const response = await fetch(`${basePath}/api/menu`);
-          if (!response.ok) {
-            console.error('無法載入選單數據');
+          // 只有特定字體才需要從 API 獲取文字
+          if (FontService.FONTS_NEEDING_MENU_TEXT.includes(this.fontFamily)) {
+            const { publicRuntimeConfig } = getConfig()
+            const basePath = publicRuntimeConfig.root || ''
+            
+            const response = await fetch(`${basePath}/api/menu`);
+            if (!response.ok) {
+              console.error('無法載入選單數據');
+            }
+            const data = await response.json();
+            const allText = JSON.stringify(data)
+            
+            // 使用正則表達式匹配中文、日文、英文、數字和標點符號
+            const pattern = /[\u4e00-\u9fa5\u3040-\u309f\u30a0-\u30ff\uff00-\uff9fa-zA-Z0-9\s\p{P}]+/gu
+            extractedChars = allText.match(pattern)?.join('') || ''
+            console.log(`[${this.fontFamily}] 提取的字元長度：`, extractedChars.length)
           }
-          const data = await response.json();
-
-          // 直接將整個 JSON 物件轉為字串
-          const allText = JSON.stringify(data)
-
-          // 使用正則表達式匹配中文、日文、英文、數字和標點符號
-          const pattern = /[\u4e00-\u9fa5\u3040-\u309f\u30a0-\u30ff\uff00-\uff9fa-zA-Z0-9\s\p{P}]+/gu
-          const extractedChars = allText.match(pattern)?.join('') || ''
-
-          console.log('提取的字元長度：', extractedChars.length)
 
           const specificChars =
             '「」，。：；？！＆（）《》『』【】〈〉〔〕、．…─│─' +
             '星期一二三四五六日' +
             '甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥' +
-            '一月二月三月四月五月六月七月八月九月十月十一月十二月'
-          console.log('specificChars', specificChars)
-
+            '一月二月三月四月五月六月七月八月九月十月十一月十二月' +
+            '燒肉烧肉焼肉內臟類内脏类ホルモン其他其他その他季節限定例湯季节限定例汤季節限定スープ飯食饭食ご飯湯品汤品スープ醃漬小菜＆沙拉腌渍小菜＆沙拉漬物＆サラダ燉煮料理炖煮料理煮物料理甜點甜点デザート伴手禮伴手礼お土産'
+          
           // 將所有字元和指定字元轉換為不重複的字元集合
           const uniqueChars = new Set([...extractedChars, ...specificChars])
-          console.log('不重複字元數量：', uniqueChars.size)
+          console.log(`[${this.fontFamily}] 不重複字元數量：`, uniqueChars.size)
 
           return [...uniqueChars].join('')
         } catch (error) {
-          console.error('獲取常用字元失敗:', error)
+          console.error(`[${this.fontFamily}] 獲取常用字元失敗:`, error)
           return ''
         }
       })()
@@ -170,31 +173,22 @@ export class FontService {
     return this.loadedCharacters.size
   }
 
-  // 新增預載入方法
-  // async preloadCommonCharacters(): Promise<void> {
-  //   try {
-  //     console.log('開始預載入常用字元...')
-  //     await this.ensureCharacters(FontService.COMMON_CHARS)
-  //     console.log('常用字元預載入完成')
-  //   } catch (error) {
-  //     console.error('預載入常用字元失敗:', error)
-  //   }
-  // }
-  public isPreloaded(): boolean {
-    return FontService.preloadedFonts.has(this.fontFamily)
-  }
-
+  // 修改 preloadCommonCharacters 方法
   public async preloadCommonCharacters(): Promise<void> {
-    console.log('preloadCommonCharacters')
+    console.log(`[${this.fontFamily}] 開始預載入常用字元`)
     try {
-      const commonChars = await FontService.getCommonChars()
+      const commonChars = await this.getCommonChars() // 使用實例方法
       if (commonChars) {
         await this.ensureCharacters(commonChars)
         FontService.preloadedFonts.add(this.fontFamily)
       }
     } catch (error) {
-      console.warn('預載入常用字元失敗:', error)
+      console.warn(`[${this.fontFamily}] 預載入常用字元失敗:`, error)
       throw error
     }
+  }
+
+  public isPreloaded(): boolean {
+    return FontService.preloadedFonts.has(this.fontFamily)
   }
 }
