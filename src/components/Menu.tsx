@@ -136,7 +136,7 @@ export default function Menu() {
 
   return (
     <div className={getFontClass()}>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 subpixel-antialiased">
         <div className="grid gap-6">
           {menuData && Object.entries(menuData).map(([category, categoryData]) => (
             <Card key={category} className="shadow-lg overflow-hidden">
@@ -145,7 +145,7 @@ export default function Menu() {
                   {categoryData?.name?.[language as Language] || category}
                 </CardTitle>
               </CardHeader>
-              <div className="p-6">
+              <div className="p-6 pt-0">
                 <div className="space-y-4">
                   {categoryData?.items?.map((item, index) => (
                     <div 
@@ -167,12 +167,19 @@ export default function Menu() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="!bg-white rounded-lg w-full max-w-[95%] mx-auto md:max-w-lg p-0 [&>button>svg]:text-gray-500 [&>button]:hover:bg-gray-300 [&>button]:p-1 [&>button]:rounded-full [&>button]:top-2 [&>button]:right-2">
+        <DialogContent className="!bg-white rounded-lg w-full max-w-[95%] mx-auto md:max-w-lg p-0 [&>button>svg]:text-gray-500 [&>button]:hover:bg-gray-300 [&>button]:p-1 [&>button]:rounded-full [&>button]:top-2 [&>button]:right-2 antialiased">
           <DialogHeader className="bg-white rounded-t-lg p-6 py-10 pb-0">
             <DialogTitle className="text-xl">
-              <div className="bg-gray-100 p-4 rounded-lg relative">
-                <div className="absolute top-2 left-4 text-base text-gray-500 font-masa">{selectedItem?.categoryName?.['ja']}</div>
-                <div className="text-2xl text-red-900 font-bold mt-4 text-center">{selectedItem?.name?.ja}</div>
+              <div className="bg-gray-100 p-4 rounded-lg relative subpixel-antialiased">
+                <div className="absolute top-2 left-4 text-base text-gray-500 font-masa">
+                  {selectedItem?.categoryName?.['ja']}
+                </div>
+                <div className="text-4xl text-red-900 font-bold mt-5 text-center">
+                  {selectedItem?.name?.ja?.split(/[()（]/)[0]}
+                </div>
+                <div className="text-xl text-red-900 font-bold text-center">
+                  {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
+                </div>
               </div>
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -180,8 +187,8 @@ export default function Menu() {
             </DialogDescription>
           </DialogHeader>
           {selectedItem && (
-            <div className="space-y-4 bg-white px-6 pb-6">
-              <div className="p-4 rounded-lg">
+            <div className="space-y-4 bg-white px-6 pb-6 subpixel-antialiased">
+              <div className="p-4 py-0 rounded-lg">
                 <div className="flex justify-end items-center gap-4">
                   <div className="font-semibold text-gray-600">価格</div>
                   <div className="text-2xl text-gray-900">{formatPrice(selectedItem.price)}</div>

@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start --port 3000 --hostname 0.0.0.0",
     "lint": "next lint",
-    "generate-subsets": "ts-node scripts/generate-font-subsets.ts"
+    "generate-subsets": "tsx scripts/generate-font-subsets.ts"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
@@ -47,6 +47,8 @@
     "subset-font": "^2.4.0",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
-  }
+  },
+  "type": "module"
 }
