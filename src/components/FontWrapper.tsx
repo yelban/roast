@@ -3,6 +3,7 @@ import {
   masaFont,
   jasonHandwriting2,
   jasonHandwriting5p,
+  uzuraFont,
   kurewaGothic,
   dingliehakka
 } from '@/config/fonts'
@@ -20,6 +21,7 @@ export function FontWrapper({ children, className = '' }: FontWrapperProps) {
       ${jasonHandwriting2.variable}
       ${jasonHandwriting5p.variable}
       ${kurewaGothic.variable}
+      ${uzuraFont.variable}
       ${dingliehakka.variable}
       ${className}
     `}>

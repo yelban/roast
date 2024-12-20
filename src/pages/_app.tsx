@@ -5,6 +5,7 @@ import {
   masaFont,
   jasonHandwriting2,
   jasonHandwriting5p,
+  uzuraFont,
   kurewaGothic,
   dingliehakka
 } from '@/config/fonts'
@@ -17,6 +18,7 @@ export default function App({ Component, pageProps }: AppProps) {
       ${jasonHandwriting2.variable}
       ${jasonHandwriting5p.variable}
       ${kurewaGothic.variable}
+      ${uzuraFont.variable}
       ${dingliehakka.variable}
     `}>
       <Component {...pageProps} />

@@ -11,13 +11,14 @@ const FONTS = [
   'MasaFont-Regular',
   'JasonHandwriting2-Medium',
   'JasonHandwriting5p-Medium',
+  'uzura_font',
   'KurewaGothicCjkTc-Bold',
   'dingliehakkafont'
 ]
 
 async function extractTextFromMenu(fontName: string): Promise<string> {
   // 只有這些字體需要完整的菜單文字
-  const fullMenuFonts = ['JasonHandwriting2-Medium', 'JasonHandwriting5p-Medium', 'KurewaGothicCjkTc-Bold','dingliehakkafont']
+  const fullMenuFonts = ['JasonHandwriting2-Medium', 'JasonHandwriting5p-Medium', 'KurewaGothicCjkTc-Bold', 'dingliehakkafont', 'uzura_font']
   
   // 加入額外的必要字元
   const additionalChars = 

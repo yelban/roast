@@ -136,6 +136,10 @@ body {
   font-family: var(--font-dingliehakka);
 }
 
+.font-uzura {
+  font-family: var(--font-uzura);
+}
+
 @keyframes slideLeftOut {
   from {
     transform: translateX(0);

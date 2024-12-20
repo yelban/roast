@@ -43,10 +43,17 @@ export const dingliehakka = localFont({
   variable: '--font-dingliehakka'
 })
 
+export const uzuraFont = localFont({
+  src: '../../public/fonts/subsets/uzura_font.ttf',
+  display: 'swap',
+  preload: true,
+  variable: '--font-uzura'
+})
+
 export const getFontClass = (lang: Language) => {
   switch (lang) {
     case 'ja':
-      return 'font-honyaji'
+      return 'font-uzura'
     case 'zh-tw':
       return 'font-kurewa'
     case 'zh-cn':
