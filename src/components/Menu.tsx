@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState, TouchEvent } from 'react'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/dialog"
 import { Language, MenuData, MenuItem } from '@/types/menu'
 import getConfig from 'next/config'
-import { useLanguageStore } from '@/store/languageStore'
+import { useLanguageStore, languageOrder } from '@/store/languageStore'
+import { getFontClass, getTitleFontClass } from '@/config/fonts'
 
 interface SelectedItem extends MenuItem {
   categoryName: {
@@ -18,89 +19,96 @@ interface SelectedItem extends MenuItem {
 }
 
 export default function Menu() {
-  const { language } = useLanguageStore()
+  const { language, setLanguage, slideDirection, setSlideDirection, nextLanguage, setNextLanguage } = useLanguageStore()
   const [menuData, setMenuData] = useState<MenuData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
 
   const loadMenuData = async () => {
     try {
-      setIsLoading(true);
-      // 使用 getConfig 獲取運行時配置
+      setIsLoading(true)
       const { publicRuntimeConfig } = getConfig()
       const basePath = publicRuntimeConfig.root || ''
-
-      console.log('basePath', `${basePath}/api/menu`)
-      const response = await fetch(`${basePath}/api/menu`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      });
-
-      console.log('API 回應狀態:', response.status);
-      console.log('API 回應 headers:', Object.fromEntries(response.headers));
-
-      const contentType = response.headers.get('content-type');
-      console.log('回應的 content-type:', contentType);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('錯誤回應內容:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-      
-      const data = await response.json();
-      setMenuData(data);
-      setError(null);
-    } catch (err) {
-      console.error('載入菜單時發生錯誤:', err);
-      setError(err instanceof Error ? err.message : '載入菜單失敗');
+      const response = await fetch(`${basePath}/api/menu`)
+      const data = await response.json()
+      setMenuData(data)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     loadMenuData()
   }, [])
 
   const handleItemClick = (item: MenuItem, categoryName: { [key in Language]: string }) => {
-    setSelectedItem({
-      ...item,
-      categoryName
-    })
+    setSelectedItem({ ...item, categoryName })
     setIsDialogOpen(true)
   }
 
-  // 載入中狀態
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center p-4">載入中...</div>
-      </div>
-    )
+  // 統一的觸控處理函數
+  const handleTouchEvent = (
+    e: TouchEvent,
+    startTouch: number | null,
+    onSwipeLeft: () => void,
+    onSwipeRight?: () => void
+  ) => {
+    if (!startTouch) return
+
+    const touchEnd = e.changedTouches[0].clientX
+    const diff = startTouch - touchEnd
+
+    if (Math.abs(diff) < 50) return
+
+    if (diff > 0) {
+      onSwipeLeft()
+    } else if (onSwipeRight) {
+      onSwipeRight()
+    }
   }
 
-  // 錯誤狀態
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center p-4 text-red-500">錯誤: {error}</div>
-      </div>
+  // 處理主頁面滑動
+  const handleMainTouchEnd = (e: TouchEvent) => {
+    handleTouchEvent(
+      e,
+      touchStart,
+      () => {
+        const currentIndex = languageOrder.indexOf(language)
+        const nextIndex = (currentIndex + 1) % languageOrder.length
+        handleLanguageChange(nextIndex)
+      },
+      () => {
+        const currentIndex = languageOrder.indexOf(language)
+        const nextIndex = (currentIndex - 1 + languageOrder.length) % languageOrder.length
+        handleLanguageChange(nextIndex)
+      }
     )
+    setTouchStart(null)
   }
 
-  // 確保 menuData 在且是物件
-  if (!menuData || typeof menuData !== 'object' || Object.keys(menuData).length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center p-4">沒有菜單資料</div>
-      </div>
+  // 處理對話框滑動
+  const handleDialogTouchEnd = (e: TouchEvent) => {
+    handleTouchEvent(
+      e,
+      touchStart,
+      () => setIsDialogOpen(false)
     )
+    setTouchStart(null)
+  }
+
+  const handleLanguageChange = (index: number) => {
+    const newLang = languageOrder[index]
+    setSlideDirection(index > languageOrder.indexOf(language) ? 'left' : 'right')
+    setNextLanguage(newLang)
+    
+    setTimeout(() => {
+      setLanguage(newLang)
+      setSlideDirection(null)
+      setNextLanguage(null)
+    }, 300)
   }
 
   const formatPrice = (price: number | { normal?: number; half?: number } | string): string => {
@@ -112,37 +120,23 @@ export default function Menu() {
     return '價格未定'
   }
 
-  const getFontTitle = () => {
-    switch (language) {
-      case 'zh-cn':
-        return 'font-dingliehakkafont'
-      default:
-        return 'font-masa'
-    }
+  if (isLoading) {
+    return <div className="container mx-auto p-8 text-center">載入中...</div>
   }
 
-  const getFontClass = () => {
-    switch (language) {
-      case 'ja':
-        return 'font-honyaji'
-      case 'zh-tw':
-        return 'font-kurewa'
-      case 'zh-cn':
-        return 'font-jason2'
-      default:
-        return 'font-jason5p'
-    }
+  if (!menuData) {
+    return <div className="container mx-auto p-8 text-center">沒有菜單資料</div>
   }
 
-  return (
-    <div className={getFontClass()}>
-      <div className="container mx-auto px-4 py-8 subpixel-antialiased">
+  const renderMenuContent = (lang: Language, className: string = '') => (
+    <div className={`${className} w-full absolute inset-0 ${getFontClass(lang)}`}>
+      <div className="container mx-auto px-4 py-8">
         <div className="grid gap-6">
-          {menuData && Object.entries(menuData).map(([category, categoryData]) => (
-            <Card key={category} className="shadow-lg overflow-hidden">
+          {Object.entries(menuData).map(([category, categoryData]) => (
+            <Card key={category}>
               <CardHeader>
-                <CardTitle className={`text-2xl ${getFontTitle()}`}>
-                  {categoryData?.name?.[language as Language] || category}
+                <CardTitle className={`text-2xl ${getTitleFontClass(lang)}`}>
+                  {categoryData?.name?.[lang] || category}
                 </CardTitle>
               </CardHeader>
               <div className="p-6 pt-0">
@@ -153,9 +147,9 @@ export default function Menu() {
                       className="flex justify-between border-b pb-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
                       onClick={() => handleItemClick(item, categoryData.name)}
                     >
-                      <span className="text-xl">{item?.name?.[language as Language] || '未知項目'}</span>
+                      <span className="text-xl">{item?.name?.[lang] || '未知項目'}</span>
                       <span className="font-semibold">
-                        {item?.price ? formatPrice(item.price) : '價格未定'}
+                        {formatPrice(item.price)}
                       </span>
                     </div>
                   ))}
@@ -165,12 +159,29 @@ export default function Menu() {
           ))}
         </div>
       </div>
+    </div>
+  )
+
+  return (
+    <div className="relative min-h-screen">
+      <div 
+        className="relative"
+        onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
+        onTouchEnd={handleMainTouchEnd}
+      >
+        {nextLanguage && renderMenuContent(nextLanguage, `slide-${slideDirection}-in`)}
+        {renderMenuContent(language, slideDirection ? `slide-${slideDirection}-out` : '')}
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="!bg-white rounded-lg w-full max-w-[95%] mx-auto md:max-w-lg p-0 [&>button>svg]:text-gray-500 [&>button]:hover:bg-gray-300 [&>button]:p-1 [&>button]:rounded-full [&>button]:top-2 [&>button]:right-2 antialiased">
-          <DialogHeader className="bg-white rounded-t-lg p-6 py-10 pb-0">
-            <DialogTitle className="text-xl">
-              <div className="bg-gray-100 p-4 rounded-lg relative subpixel-antialiased">
+        <DialogContent 
+          className="dialog-content bg-white rounded-lg max-w-[95%] md:max-w-lg"
+          onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
+          onTouchEnd={handleDialogTouchEnd}
+        >
+          <DialogHeader>
+            <DialogTitle>
+              <div className="bg-gray-100 p-4 rounded-lg relative">
                 <div className="absolute top-2 left-4 text-base text-gray-500 font-masa">
                   {selectedItem?.categoryName?.['ja']}
                 </div>
@@ -182,13 +193,11 @@ export default function Menu() {
                 </div>
               </div>
             </DialogTitle>
-            <DialogDescription className="sr-only">
-              商品詳細資訊
-            </DialogDescription>
+            <DialogDescription className="sr-only">商品詳細資訊</DialogDescription>
           </DialogHeader>
           {selectedItem && (
-            <div className="space-y-4 bg-white px-6 pb-6 subpixel-antialiased">
-              <div className="p-4 py-0 rounded-lg">
+            <div className="space-y-4 px-6 pb-6">
+              <div className="py-0">
                 <div className="flex justify-end items-center gap-4">
                   <div className="font-semibold text-gray-600">価格</div>
                   <div className="text-2xl text-gray-900">{formatPrice(selectedItem.price)}</div>

@@ -1,4 +1,5 @@
 import localFont from 'next/font/local'
+import { Language } from '@/types/menu'
 
 export const honyaJi = localFont({
   src: '../../public/fonts/subsets/HonyaJi-Re.ttf',
@@ -41,3 +42,25 @@ export const dingliehakka = localFont({
   preload: true,
   variable: '--font-dingliehakka'
 })
+
+export const getFontClass = (lang: Language) => {
+  switch (lang) {
+    case 'ja':
+      return 'font-honyaji'
+    case 'zh-tw':
+      return 'font-kurewa'
+    case 'zh-cn':
+      return 'font-jason2'
+    default:
+      return 'font-jason5p'
+  }
+}
+
+export const getTitleFontClass = (lang: Language) => {
+  switch (lang) {
+    case 'zh-cn':
+      return 'font-dingliehakkafont'
+    default:
+      return 'font-masa'
+  }
+}

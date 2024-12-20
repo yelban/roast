@@ -86,7 +86,26 @@ body {
 }
 
 .dialog-content {
-  background-color: white !important;
+  background-color: white;
+  touch-action: pan-x;
+  user-select: none;
+}
+
+/* 添加關閉按鈕樣式 */
+.dialog-content > button {
+  position: absolute !important;
+  top: 0.25rem !important;
+  right: 0.25rem !important;
+  padding: 0.25rem !important;
+  border-radius: 9999px !important;
+}
+
+.dialog-content > button:hover {
+  background-color: rgb(209 213 219) !important;
+}
+
+.dialog-content > button > svg {
+  color: rgb(107 114 128) !important;
 }
 
 [data-theme='dark'] .dialog-content {
@@ -115,4 +134,87 @@ body {
 
 .font-dingliehakkafont {
   font-family: var(--font-dingliehakka);
+}
+
+@keyframes slideLeftOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 1;
+  }
+}
+
+@keyframes slideLeftIn {
+  from {
+    transform: translateX(100%);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideRightOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 1;
+  }
+}
+
+@keyframes slideRightIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-left-out {
+  position: absolute;
+  width: 100%;
+  animation: slideLeftOut 0.3s ease-in-out;
+}
+
+.slide-left-in {
+  position: absolute;
+  width: 100%;
+  animation: slideLeftIn 0.3s ease-in-out;
+}
+
+.slide-right-out {
+  position: absolute;
+  width: 100%;
+  animation: slideRightOut 0.3s ease-in-out;
+}
+
+.slide-right-in {
+  position: absolute;
+  width: 100%;
+  animation: slideRightIn 0.3s ease-in-out;
+}
+
+@keyframes slideDialogOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.slide-dialog-out {
+  animation: slideDialogOut 0.3s ease-in-out;
 }
