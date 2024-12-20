@@ -35,30 +35,42 @@ const getMetadata = (language: Language) => {
 }
 
 export default function Home() {
-  const { language, setLanguage, setSlideDirection, setNextLanguage } = useLanguageStore()
+  const { language, setLanguage, setSlideDirection, setNextLanguage, initializeLanguage } = useLanguageStore()
   
+  useEffect(() => {
+    initializeLanguage()
+  }, [initializeLanguage])
+
   // 語言順序定義
   const languageOrder: Language[] = ['ja', 'zh-tw', 'zh-cn', 'en']
 
-  const handleLanguageChange = (newLang: Language) => {
+  const handleLanguageChange = (lang: Language) => {
     const currentIndex = languageOrder.indexOf(language)
-    const newIndex = languageOrder.indexOf(newLang)
+    const nextIndex = languageOrder.indexOf(lang)
     
-    // 決定滑動方向
-    let direction: 'left' | 'right'
-    if (currentIndex < newIndex) {
-      // 如果是從最後一個到第一個，視為向右滑
-      direction = (currentIndex === 0 && newIndex === languageOrder.length - 1) ? 'right' : 'left'
+    // // 決定滑動方向
+    // let direction: 'left' | 'right'
+    // if (currentIndex < newIndex) {
+    //   // 如果是從最後一個到第一個，視為向右滑
+    //   direction = (currentIndex === 0 && newIndex === languageOrder.length - 1) ? 'right' : 'left'
+    // } else {
+    //   // 如果是從第一個到最後一個，視為向左滑
+    //   direction = (currentIndex === languageOrder.length - 1 && newIndex === 0) ? 'left' : 'right'
+    // }
+
+    // setSlideDirection(direction)
+
+    // 設定滑動方向
+    if (currentIndex < nextIndex) {
+      setSlideDirection('left')
     } else {
-      // 如果是從第一個到最後一個，視為向左滑
-      direction = (currentIndex === languageOrder.length - 1 && newIndex === 0) ? 'left' : 'right'
+      setSlideDirection('right')
     }
 
-    setSlideDirection(direction)
-    setNextLanguage(newLang)
+    setNextLanguage(lang)
     
     setTimeout(() => {
-      setLanguage(newLang)
+      setLanguage(lang)
       setSlideDirection(null)
       setNextLanguage(null)
     }, 300)
@@ -70,7 +82,7 @@ export default function Home() {
     <>
       <Seo {...metadata} />
       <div className="min-h-screen">
-        <header className="bg-gray-800 text-white p-4">
+        <header className="bg-gray-800 text-white p-4 fixed top-0 left-0 right-0 z-50">
           <div className="container mx-auto flex justify-between items-center">
             <div>
               <Image 
@@ -84,34 +96,24 @@ export default function Home() {
               />
             </div>
             <div className="space-x-1 text-sm">
-              <button
-                onClick={() => handleLanguageChange('ja')}
-                className={`px-0.5 py-2 rounded ${language === 'ja' ? 'bg-white text-gray-800' : ''}`}
-              >
-                日本語
-              </button>
-              <button
-                onClick={() => handleLanguageChange('zh-tw')}
-                className={`px-0.5 py-2 rounded ${language === 'zh-tw' ? 'bg-white text-gray-800' : ''}`}
-              >
-                台湾語
-              </button>
-              <button
-                onClick={() => handleLanguageChange('zh-cn')}
-                className={`px-0.5 py-2 rounded ${language === 'zh-cn' ? 'bg-white text-gray-800' : ''}`}
-              >
-                中国語
-              </button>
-              <button
-                onClick={() => handleLanguageChange('en')}
-                className={`px-0.5 py-2 rounded ${language === 'en' ? 'bg-white text-gray-800' : ''}`}
-              >
-                English
-              </button>
+              {languageOrder.map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => handleLanguageChange(lang)}
+                  className={`px-0.5 py-2 rounded transition-colors duration-300 ${
+                    language === lang ? 'bg-white text-gray-800' : ''
+                  }`}
+                >
+                  {lang === 'ja' && '日本語'}
+                  {lang === 'zh-tw' && '台湾語'}
+                  {lang === 'zh-cn' && '中国語'}
+                  {lang === 'en' && 'English'}
+                </button>
+              ))}
             </div>
           </div>
         </header>
-        <main>
+        <main className="pt-[72px] relative">
           <Menu />
         </main>
       </div>

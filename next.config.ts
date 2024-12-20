@@ -3,7 +3,7 @@ import path from 'path';
 
 const nextConfig: NextConfig = {
   // 開啟 React 嚴格模式
-  reactStrictMode: false,
+  reactStrictMode: true,
 
   // 部署相關配置
   assetPrefix: process.env.BASE_PATH || '',

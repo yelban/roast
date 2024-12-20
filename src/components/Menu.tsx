@@ -11,6 +11,9 @@ import { Language, MenuData, MenuItem } from '@/types/menu'
 import getConfig from 'next/config'
 import { useLanguageStore, languageOrder } from '@/store/languageStore'
 import { getFontClass, getTitleFontClass } from '@/config/fonts'
+import { Button } from '@/components/ui/button'
+import { Volume2 } from 'lucide-react'
+import { FontWrapper } from '@/components/FontWrapper'
 
 interface SelectedItem extends MenuItem {
   categoryName: {
@@ -21,14 +24,16 @@ interface SelectedItem extends MenuItem {
 export default function Menu() {
   const { language, setLanguage, slideDirection, setSlideDirection, nextLanguage, setNextLanguage } = useLanguageStore()
   const [menuData, setMenuData] = useState<MenuData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isMenuLoading, setIsMenuLoading] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [isTTSLoading, setIsTTSLoading] = useState(false)
 
   const loadMenuData = async () => {
     try {
-      setIsLoading(true)
+      setIsMenuLoading(true)
       const { publicRuntimeConfig } = getConfig()
       const basePath = publicRuntimeConfig.root || ''
       
@@ -36,7 +41,7 @@ export default function Menu() {
       const data = await response.json()
       setMenuData(data)
     } finally {
-      setIsLoading(false)
+      setIsMenuLoading(false)
     }
   }
 
@@ -120,7 +125,35 @@ export default function Menu() {
     return '價格未定'
   }
 
-  if (isLoading) {
+  const playTTS = async (text: string) => {
+    try {
+      setIsTTSLoading(true)
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      })
+
+      if (!response.ok) throw new Error('TTS request failed')
+
+      const audioData = await response.blob()
+      const audio = new Audio(URL.createObjectURL(audioData))
+      
+      setIsPlaying(true)
+      
+      audio.onended = () => {
+        setIsPlaying(false)
+      }
+      
+      await audio.play()
+    } finally {
+      setIsTTSLoading(false)
+    }
+  }
+
+  if (isMenuLoading) {
     return <div className="container mx-auto p-8 text-center">載入中...</div>
   }
 
@@ -128,8 +161,8 @@ export default function Menu() {
     return <div className="container mx-auto p-8 text-center">沒有菜單資料</div>
   }
 
-  const renderMenuContent = (lang: Language, className: string = '') => (
-    <div className={`${className} w-full absolute inset-0 ${getFontClass(lang)}`}>
+  const renderMenuContent = (lang: Language) => (
+    <div className={`w-full ${getFontClass(lang)}`}>
       <div className="container mx-auto px-4 py-8">
         <div className="grid gap-6">
           {Object.entries(menuData).map(([category, categoryData]) => (
@@ -165,12 +198,21 @@ export default function Menu() {
   return (
     <div className="relative min-h-screen">
       <div 
-        className="relative"
+        className="relative overflow-auto"
+        style={{ minHeight: 'calc(100vh - 72px)', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}
         onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
         onTouchEnd={handleMainTouchEnd}
       >
-        {nextLanguage && renderMenuContent(nextLanguage, `slide-${slideDirection}-in`)}
-        {renderMenuContent(language, slideDirection ? `slide-${slideDirection}-out` : '')}
+        <div className="relative w-full h-full">
+          {nextLanguage && (
+            <div className={`absolute inset-0 w-full slide-${slideDirection}-in`}>
+              {renderMenuContent(nextLanguage)}
+            </div>
+          )}
+          <div className={`${slideDirection ? `absolute inset-0 w-full slide-${slideDirection}-out` : ''}`}>
+            {renderMenuContent(language)}
+          </div>
+        </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -179,49 +221,81 @@ export default function Menu() {
           onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
           onTouchEnd={handleDialogTouchEnd}
         >
-          <DialogHeader>
-            <DialogTitle>
-              <div className="bg-gray-100 p-4 rounded-lg relative">
-                <div className="absolute top-2 left-4 text-base text-gray-500 font-masa">
-                  {selectedItem?.categoryName?.['ja']}
+          <FontWrapper>
+            <DialogHeader>
+              <DialogTitle>
+                <div className="bg-gray-100 p-4 rounded-lg relative">
+                  <div className={`absolute top-2 left-4 text-base text-gray-500 ${getTitleFontClass('ja')} flex items-center gap-2`}>
+                    {selectedItem?.categoryName?.['ja']}
+                  </div>
+                  <div className="text-4xl text-red-900 font-bold mt-5 text-center">
+                    {selectedItem?.name?.ja?.split(/[()（]/)[0]}
+                  </div>
+                  <div className="text-xl text-red-900 font-bold text-center">
+                    {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={isTTSLoading || isPlaying}
+                    className={`h-8 w-8 inline-flex items-center justify-center hover:bg-gray-200 relative
+                      ${isTTSLoading ? 'animate-pulse' : ''}
+                      ${isPlaying ? 'text-blue-600' : 'text-gray-600'}
+                    `}
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                      e.stopPropagation()
+                      if (selectedItem?.name?.['ja']) {
+                        playTTS(selectedItem.name['ja'])
+                      }
+                    }}
+                  >
+                    {isTTSLoading ? (
+                      <div className="h-5 w-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Volume2 className="h-5 w-5 fill-current" />
+                        {isPlaying && (
+                          <div className="absolute -right-[6px] flex items-center gap-[2px]">
+                            <div className="w-[2px] h-[8px] bg-blue-600 animate-sound-wave-1" />
+                            <div className="w-[2px] h-[12px] bg-blue-600 animate-sound-wave-2" />
+                            <div className="w-[2px] h-[16px] bg-blue-600 animate-sound-wave-3" />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <div className="text-4xl text-red-900 font-bold mt-5 text-center">
-                  {selectedItem?.name?.ja?.split(/[()（]/)[0]}
+              </DialogTitle>
+              <DialogDescription className="sr-only">商品詳細資訊</DialogDescription>
+            </DialogHeader>
+            {selectedItem && (
+              <div className="space-y-4 px-0 pb-6">
+                <div className="py-2">
+                  <div className="flex justify-end items-center gap-4">
+                    <div className="font-semibold text-gray-600">価格</div>
+                    <div className="text-2xl text-gray-900">{formatPrice(selectedItem.price)}</div>
+                  </div>
                 </div>
-                <div className="text-xl text-red-900 font-bold text-center">
-                  {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
+                <div className="pt-4 border-t">
+                  <div className="font-semibold text-gray-600 mb-4">その他の言語</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <span className="block text-sm text-gray-500 mb-1">台湾語</span>
+                      <div className="text-gray-900 text-xl">{selectedItem.name['zh-tw']}</div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <span className="block text-sm text-gray-500 mb-1">中国語</span>
+                      <div className="text-gray-900 text-xl">{selectedItem.name['zh-cn']}</div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg md:col-span-2">
+                      <span className="block text-sm text-gray-500 mb-1">English</span>
+                      <div className="text-gray-900 text-xl">{selectedItem.name.en}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </DialogTitle>
-            <DialogDescription className="sr-only">商品詳細資訊</DialogDescription>
-          </DialogHeader>
-          {selectedItem && (
-            <div className="space-y-4 px-6 pb-6">
-              <div className="py-0">
-                <div className="flex justify-end items-center gap-4">
-                  <div className="font-semibold text-gray-600">価格</div>
-                  <div className="text-2xl text-gray-900">{formatPrice(selectedItem.price)}</div>
-                </div>
-              </div>
-              <div className="pt-4 border-t">
-                <div className="font-semibold text-gray-600 mb-4">その他の言語</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <span className="block text-sm text-gray-500 mb-1">台湾語</span>
-                    <div className="text-gray-900">{selectedItem.name['zh-tw']}</div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <span className="block text-sm text-gray-500 mb-1">中国語</span>
-                    <div className="text-gray-900">{selectedItem.name['zh-cn']}</div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg md:col-span-2">
-                    <span className="block text-sm text-gray-500 mb-1">English</span>
-                    <div className="text-gray-900">{selectedItem.name.en}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </FontWrapper>
         </DialogContent>
       </Dialog>
     </div>

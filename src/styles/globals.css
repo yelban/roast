@@ -218,3 +218,56 @@ body {
 .slide-dialog-out {
   animation: slideDialogOut 0.3s ease-in-out;
 }
+
+/* 如果還沒有這些樣式，請添加 */
+.slide-left-in {
+  animation: slideLeftIn 0.3s forwards;
+}
+
+.slide-left-out {
+  animation: slideLeftOut 0.3s forwards;
+}
+
+.slide-right-in {
+  animation: slideRightIn 0.3s forwards;
+}
+
+.slide-right-out {
+  animation: slideRightOut 0.3s forwards;
+}
+
+@keyframes slideLeftIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideLeftOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideRightIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRightOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}

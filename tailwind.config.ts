@@ -58,6 +58,30 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
     },
+    keyframes: {
+      'spin': {
+        'from': { transform: 'rotate(0deg)' },
+        'to': { transform: 'rotate(360deg)' }
+      },
+      'sound-wave-1': {
+        '0%, 100%': { height: '6px' },
+        '50%': { height: '8px' },
+      },
+      'sound-wave-2': {
+        '0%, 100%': { height: '8px' },
+        '50%': { height: '12px' },
+      },
+      'sound-wave-3': {
+        '0%, 100%': { height: '10px' },
+        '50%': { height: '16px' },
+      },
+    },
+    animation: {
+      'spin': 'spin 1s linear infinite',
+      'sound-wave-1': 'sound-wave-1 0.8s ease-in-out infinite',
+      'sound-wave-2': 'sound-wave-2 0.8s ease-in-out infinite 0.2s',
+      'sound-wave-3': 'sound-wave-3 0.8s ease-in-out infinite 0.4s',
+    },
   },
   plugins: [animate],
 } satisfies Config;
