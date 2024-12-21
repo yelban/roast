@@ -173,17 +173,20 @@ export default function Menu() {
                 </CardTitle>
               </CardHeader>
               <div className="p-6 pt-0">
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {categoryData?.items?.map((item, index) => (
                     <div 
                       key={index} 
-                      className="flex justify-between border-b pb-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                      className="flex justify-between border-b pb-2 p-0 cursor-pointer hover:bg-gray-50 rounded"
                       onClick={() => handleItemClick(item, categoryData.name)}
                     >
                       <span className="text-xl">{item?.name?.[lang] || '未知項目'}</span>
-                      <span className="font-semibold">
-                        {formatPrice(item.price)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">
+                          {formatPrice(item.price)}
+                        </span>
+                        <span className="flex items-center text-gray-300">❯</span>
+                      </div>
                     </div>
                   ))}
                 </div>

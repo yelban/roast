@@ -7,18 +7,17 @@ const require = createRequire(import.meta.url)
 const subsetFont = require('subset-font')
 
 const FONTS = [
-  'HonyaJi-Re',
+  'dingliehakkafont',
   'MasaFont-Regular',
-  'JasonHandwriting2-Medium',
-  'JasonHandwriting5p-Medium',
   'uzura_font',
+  'JasonHandwriting2-SemiBold',
   'KurewaGothicCjkTc-Bold',
-  'dingliehakkafont'
+  'KurewaGothicCjkJp-Bold'
 ]
 
 async function extractTextFromMenu(fontName: string): Promise<string> {
   // 只有這些字體需要完整的菜單文字
-  const fullMenuFonts = ['JasonHandwriting2-Medium', 'JasonHandwriting5p-Medium', 'KurewaGothicCjkTc-Bold', 'dingliehakkafont', 'uzura_font']
+  const fullMenuFonts = ['uzura_font', 'JasonHandwriting2-SemiBold', 'KurewaGothicCjkTc-Bold', 'KurewaGothicCjkJp-Bold']
   
   // 加入額外的必要字元
   const additionalChars = 

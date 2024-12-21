@@ -1,27 +1,11 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import {
-  honyaJi,
-  masaFont,
-  jasonHandwriting2,
-  jasonHandwriting5p,
-  uzuraFont,
-  kurewaGothic,
-  dingliehakka
-} from '@/config/fonts'
+import { FontWrapper } from '@/components/FontWrapper';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <div className={`
-      ${honyaJi.variable} 
-      ${masaFont.variable} 
-      ${jasonHandwriting2.variable}
-      ${jasonHandwriting5p.variable}
-      ${kurewaGothic.variable}
-      ${uzuraFont.variable}
-      ${dingliehakka.variable}
-    `}>
+    <FontWrapper>
       <Component {...pageProps} />
-    </div>
+    </FontWrapper>
   );
 }

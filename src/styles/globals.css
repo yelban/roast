@@ -112,32 +112,28 @@ body {
   background-color: #1f2937 !important;
 }
 
-.font-honyaji {
-  font-family: var(--font-honya-ji);
+.font-dingliehakkafont {
+  font-family: var(--font-dingliehakka);
 }
 
 .font-masa {
   font-family: var(--font-masa);
 }
 
+.font-uzura {
+  font-family: var(--font-uzura);
+}
+
 .font-jason2 {
   font-family: var(--font-jason2);
 }
 
-.font-jason5p {
-  font-family: var(--font-jason5p);
+.font-kurewa-tc {
+  font-family: var(--font-kurewa-tc);
 }
 
-.font-kurewa {
-  font-family: var(--font-kurewa);
-}
-
-.font-dingliehakkafont {
-  font-family: var(--font-dingliehakka);
-}
-
-.font-uzura {
-  font-family: var(--font-uzura);
+.font-kurewa-jp {
+  font-family: var(--font-kurewa-jp);
 }
 
 @keyframes slideLeftOut {

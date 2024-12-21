@@ -1,11 +1,10 @@
 import {
-  honyaJi,
+  dingliehakka,
   masaFont,
-  jasonHandwriting2,
-  jasonHandwriting5p,
   uzuraFont,
-  kurewaGothic,
-  dingliehakka
+  jasonHandwriting2,
+  kurewaGothicTc,
+  kurewaGothicJp
 } from '@/config/fonts'
 
 interface FontWrapperProps {
@@ -16,13 +15,12 @@ interface FontWrapperProps {
 export function FontWrapper({ children, className = '' }: FontWrapperProps) {
   return (
     <div className={`
-      ${honyaJi.variable} 
-      ${masaFont.variable} 
-      ${jasonHandwriting2.variable}
-      ${jasonHandwriting5p.variable}
-      ${kurewaGothic.variable}
-      ${uzuraFont.variable}
       ${dingliehakka.variable}
+      ${masaFont.variable}
+      ${uzuraFont.variable}
+      ${jasonHandwriting2.variable}
+      ${kurewaGothicTc.variable}
+      ${kurewaGothicJp.variable}
       ${className}
     `}>
       {children}
