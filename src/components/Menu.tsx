@@ -140,28 +140,55 @@ export default function Menu() {
       const protocol = window.location.protocol
       const host = window.location.host
       const apiUrl = `${protocol}//${host}${basePath}/api/tts/?text=${encodeURIComponent(text)}`
+      const textHash = generateHash(text)
 
-      const response = await fetch(apiUrl, {
+      // 先嘗試使用帶有 If-None-Match 的請求
+      let response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Accept': 'audio/mpeg',
-          'Cache-Control': 'no-cache',
-          'If-None-Match': `"${generateHash(text)}"`,
+          'Cache-Control': 'public, max-age=31536000',
+          'If-None-Match': `"${textHash}"`,
         }
       })
 
-      if (!response.ok) throw new Error('TTS request failed')
+      // 如果收到 304 但找不到快取，重新發送請求獲取完整內容
+      if (response.status === 304) {
+        const cacheResponse = await caches.match(apiUrl)
+        if (!cacheResponse) {
+          console.log('Cache miss, fetching full content')
+          response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'audio/mpeg',
+              'Cache-Control': 'public, max-age=31536000',
+            }
+          })
+        } else {
+          response = cacheResponse
+        }
+      }
 
+      if (!response.ok) {
+        throw new Error('TTS request failed')
+      }
+
+      // 儲存到快取
+      const cache = await caches.open('tts-cache')
+      await cache.put(apiUrl, response.clone())
+
+      // 播放音訊
       const audioData = await response.blob()
-      const audio = new Audio()
       const blobUrl = URL.createObjectURL(audioData)
+
+      const audio = new Audio()
       audio.src = blobUrl
       
       setIsPlaying(true)
       
       audio.onended = () => {
         setIsPlaying(false)
-        URL.revokeObjectURL(blobUrl) // 釋放 Blob URL
+        URL.revokeObjectURL(blobUrl)
       }
       
       await audio.play()

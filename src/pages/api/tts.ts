@@ -112,17 +112,27 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' })
+    res.status(405).end()
+    return
   }
 
   const { text } = req.query
   if (!text || typeof text !== 'string') {
-    return res.status(400).json({ message: 'Text is required' })
+    res.status(400).json({ message: 'Text is required' })
+    return
   }
 
   try {
     const hashId = generateHashId(text)
     console.log('hashId', hashId)
+    
+    // 檢查 If-None-Match 標頭
+    const ifNoneMatch = req.headers['if-none-match']
+    if (ifNoneMatch === `"${hashId}"`) {
+      console.log('🎵 Client cache hit')
+      res.status(304).end()
+      return
+    }
     
     // 檢查快取
     const cachedAudio = await getCachedAudio(hashId)
@@ -131,7 +141,8 @@ export default async function handler(
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
       res.setHeader('ETag', `"${hashId}"`)
       res.setHeader('Vary', 'Accept')
-      return res.send(cachedAudio)
+      res.send(cachedAudio)
+      return
     }
 
     console.log('🎙️ Fetching from Azure TTS')
@@ -191,8 +202,11 @@ export default async function handler(
     res.setHeader('ETag', `"${hashId}"`)
     res.setHeader('Vary', 'Accept')
     res.send(audioBuffer)
+    return
+
   } catch (error) {
     console.error('TTS error:', error)
     res.status(500).json({ message: 'TTS generation failed' })
+    return
   }
 } 
