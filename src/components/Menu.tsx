@@ -285,7 +285,8 @@ export default function Menu() {
                     variant="ghost"
                     size="icon"
                     disabled={isTTSLoading || isPlaying}
-                    className={`h-8 w-8 inline-flex items-center justify-center hover:bg-gray-200 relative
+                    className={`h-8 w-8 pt-2 inline-flex items-center justify-center hover:bg-gray-200 relative
+                      focus-visible:ring-0 focus-visible:ring-offset-0
                       ${isTTSLoading ? 'animate-pulse' : ''}
                       ${isPlaying ? 'text-blue-600' : 'text-gray-600'}
                     `}
@@ -297,7 +298,7 @@ export default function Menu() {
                     }}
                   >
                     {isTTSLoading ? (
-                      <div className="h-5 w-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                      <div className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
                         <Volume2 className="h-5 w-5 fill-current" />
