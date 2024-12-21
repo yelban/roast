@@ -122,7 +122,6 @@ export default async function handler(
 
   try {
     const hashId = generateHashId(text)
-    console.log('hashId', hashId)
     
     // 檢查快取
     const cachedAudio = await getCachedAudio(hashId)

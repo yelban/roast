@@ -3,7 +3,7 @@ import path from 'path';
 
 const nextConfig: NextConfig = {
   // 開啟 React 嚴格模式
-  reactStrictMode: true,
+  reactStrictMode: false,
 
   // 部署相關配置
   assetPrefix: process.env.BASE_PATH || '',
@@ -71,6 +71,14 @@ const nextConfig: NextConfig = {
             key: 'Access-Control-Allow-Headers',
             value: 'Content-Type',
           },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
         ],
       },
       {
@@ -93,6 +101,15 @@ const nextConfig: NextConfig = {
             value: 'public, max-age=31536000, immutable'
           }
         ],
+      },
+    ]
+  },
+
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
       },
     ]
   },

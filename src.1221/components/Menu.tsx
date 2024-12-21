@@ -38,9 +38,7 @@ export default function Menu() {
       const { publicRuntimeConfig } = getConfig()
       const basePath = publicRuntimeConfig?.root || ''
       
-      const protocol = window.location.protocol
-      const host = window.location.host
-      const apiPath = basePath ? `${protocol}//${host}${basePath}/api/menu` : `${protocol}//${host}/api/menu`
+      const apiPath = basePath ? `${basePath}/api/menu` : '/api/menu'
       const response = await fetch(apiPath)
       const data = await response.json()
       setMenuData(data)
@@ -137,11 +135,7 @@ export default function Menu() {
       const { publicRuntimeConfig } = getConfig()
       const basePath = publicRuntimeConfig.root || ''
       
-      const protocol = window.location.protocol
-      const host = window.location.host
-      const apiUrl = `${protocol}//${host}${basePath}/api/tts/?text=${encodeURIComponent(text)}`
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`${basePath}/api/tts/?text=${encodeURIComponent(text)}`, {
         method: 'GET',
         headers: {
           'Accept': 'audio/mpeg',
