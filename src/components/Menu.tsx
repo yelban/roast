@@ -72,7 +72,7 @@ export default function Menu() {
     const touchEnd = e.changedTouches[0].clientX
     const diff = startTouch - touchEnd
 
-    if (Math.abs(diff) < 50) return
+    if (Math.abs(diff) < 125) return
 
     if (diff > 0) {
       onSwipeLeft()
@@ -83,18 +83,26 @@ export default function Menu() {
 
   // 處理主頁面滑動
   const handleMainTouchEnd = (e: TouchEvent) => {
+    const currentIndex = languageOrder.indexOf(language)
+    const isFirstLanguage = currentIndex === 0
+    const isLastLanguage = currentIndex === languageOrder.length - 1
+
     handleTouchEvent(
       e,
       touchStart,
       () => {
-        const currentIndex = languageOrder.indexOf(language)
-        const nextIndex = (currentIndex + 1) % languageOrder.length
-        handleLanguageChange(nextIndex)
+        // 向左滑動（下一個語言）
+        if (!isLastLanguage) {
+          const nextIndex = currentIndex + 1
+          handleLanguageChange(nextIndex)
+        }
       },
       () => {
-        const currentIndex = languageOrder.indexOf(language)
-        const nextIndex = (currentIndex - 1 + languageOrder.length) % languageOrder.length
-        handleLanguageChange(nextIndex)
+        // 向右滑動（上一個語言）
+        if (!isFirstLanguage) {
+          const nextIndex = currentIndex - 1
+          handleLanguageChange(nextIndex)
+        }
       }
     )
     setTouchStart(null)
