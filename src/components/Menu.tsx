@@ -298,7 +298,7 @@ export default function Menu() {
                     }}
                   >
                     {isTTSLoading ? (
-                      <div className="h-5 w-5 animate-spin" />
+                      <div className="h-5 w-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
                         <Volume2 className="h-5 w-5 fill-current" />
