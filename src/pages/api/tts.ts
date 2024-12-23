@@ -107,6 +107,21 @@ async function cleanupOldCache() {
   // Vercel Blob 目前沒有直接的清 API，所以移除相關邏輯
 }
 
+const logCacheStatus = (req: NextApiRequest, hashId: string, cacheSource: string) => {
+  const cfCacheStatus = req.headers['cf-cache-status']  // Cloudflare 快取狀態
+  const cfRay = req.headers['cf-ray']  // Cloudflare Ray ID
+  const cfCountry = req.headers['cf-ipcountry']  // 國家資訊
+
+  console.log(`Cache Status for ${hashId}:`, {
+    source: cacheSource,
+    cfStatus: cfCacheStatus,
+    cfRay,
+    cfCountry,
+    userAgent: req.headers['user-agent'],
+    timestamp: new Date().toISOString()
+  })
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -128,19 +143,37 @@ export default async function handler(
     
     // 檢查 If-None-Match 標頭
     const ifNoneMatch = req.headers['if-none-match']
-    if (ifNoneMatch === `"${hashId}"`) {
-      console.log('🎵 Client cache hit')
-      res.status(304).end()
-      return
-    }
+    const ifModifiedSince = req.headers['if-modified-since']
+    // if (ifNoneMatch === `"${hashId}"`) {
+    //   console.log('🎵 Client cache hit')
+    //   res.status(304).end()
+    //   return
+    // }
+    if (ifNoneMatch === `"${hashId}"` || 
+      (ifModifiedSince && new Date(ifModifiedSince) >= new Date())) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
+    res.setHeader('ETag', `"${hashId}"`)
+    res.status(304).end()
+    return
+  }
     
     // 檢查快取
     const cachedAudio = await getCachedAudio(hashId)
     if (cachedAudio) {
+      logCacheStatus(req, hashId, 'CACHE_HIT')
       res.setHeader('Content-Type', 'audio/mpeg')
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+      res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
+      res.setHeader('CDN-Cache-Control', 'max-age=31536000')
+      res.setHeader('Cloudflare-CDN-Cache-Control', 'max-age=31536000')
       res.setHeader('ETag', `"${hashId}"`)
       res.setHeader('Vary', 'Accept')
+      // Cloudflare 特定的優化
+      res.setHeader('CF-Cache-Tags', `tts-${hashId}`)  // 用於快取標記
+      res.setHeader('CF-Cache-Status', 'DYNAMIC')
+      // 安全性標頭
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+      res.setHeader('X-Content-Type-Options', 'nosniff')
+
       res.send(cachedAudio)
       return
     }
@@ -197,10 +230,23 @@ export default async function handler(
     // 儲存快取
     await setCachedAudio(hashId, audioBuffer)
 
+    // 瀏覽器本地快取（通過 ETag 和 Cache-Control）
+    // CloudFlare CDN 快取（通過 CDN-Cache-Control 和頁面規則）
+    // Vercel Edge 快取（通過 s-maxage）
+    // Vercel Blob 存儲（現有的實現）
+
     res.setHeader('Content-Type', 'audio/mpeg')
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
+    res.setHeader('CDN-Cache-Control', 'max-age=31536000')
+    res.setHeader('Cloudflare-CDN-Cache-Control', 'max-age=31536000')
     res.setHeader('ETag', `"${hashId}"`)
     res.setHeader('Vary', 'Accept')
+    // Cloudflare 特定的優化
+    res.setHeader('CF-Cache-Tags', `tts-${hashId}`)  // 用於快取標記
+    res.setHeader('CF-Cache-Status', 'DYNAMIC')
+    // 安全性標頭
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    res.setHeader('X-Content-Type-Options', 'nosniff')
     res.send(audioBuffer)
     return
 

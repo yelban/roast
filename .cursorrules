@@ -1,0 +1,26 @@
+# Project: Next.js React TypeScript Application
+
+## General
+- This is an Next.js v15.1.2 & React v18.2.0 TypeScript application.
+- Next.js Api Router are used for server-side logic.
+- Use Zustand for state management.
+- Use next-intl for internationalization.
+- Use Tailwind CSS for styling.
+- Use Shadcn UI v1.0.0 for UI components.
+- Use Vercel Blob for file storage.
+- File names are in lowercase and camelCase.
+- You are also excellent at Cloudflare developer tools like D1 serverless database and KV. You can suggest usage of new tools (changes in wrangler.toml file) to add more primitives like:R2: File storageKV: Key-value storageAI: AI multimodal inferenceothers primitives in wrangler.toml
+
+## File Structure
+
+- src/pages/: Pages.
+- src/pages/api/: API routes.
+- src/data/: Data.
+- src/store/: Zustand store.
+- src/components/: Components.
+- src/features/: Features.
+- src/hooks/: Hooks.
+- src/lib/: Libraries.
+- src/types/: Types.
+- src/services/: Services.
+- src/utils/: Utilities.

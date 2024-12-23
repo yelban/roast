@@ -105,9 +105,23 @@ const nextConfig: NextConfig = {
       {
         source: '/api/tts',
         headers: [
+          // {
+          //   key: 'Cache-Control',
+          //   value: 'public, max-age=31536000, immutable'
+          // },
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable'
+            // 修改快取策略以支援 CloudFlare CDN
+            value: 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable'
+          },
+          // CloudFlare 特定的快取控制標頭
+          {
+            key: 'CDN-Cache-Control',
+            value: 'max-age=31536000'
+          },
+          {
+            key: 'Cloudflare-CDN-Cache-Control',
+            value: 'max-age=31536000'
           },
           {
             key: 'Access-Control-Allow-Origin',
