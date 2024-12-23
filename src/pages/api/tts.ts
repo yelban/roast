@@ -204,6 +204,7 @@ export default async function handler(
     if (ifNoneMatch === `"${hashId}"` || 
       (ifModifiedSince && new Date(ifModifiedSince) >= new Date())) {
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
+    res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
     res.setHeader('ETag', `"${hashId}"`)
     res.status(304).end()
     return
@@ -215,7 +216,7 @@ export default async function handler(
       logCacheStatus(req, hashId, cacheSource)
       res.setHeader('Content-Type', 'audio/mpeg')
       res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
-      res.setHeader('CF-Cache-Control', 'max-age=31536000')
+      res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
       res.setHeader('Content-Length', cachedAudio.length.toString())
       res.setHeader('Accept-Ranges', 'bytes')
       res.setHeader('ETag', `"${hashId}"`)
@@ -290,7 +291,7 @@ export default async function handler(
 
     res.setHeader('Content-Type', 'audio/mpeg')
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
-    res.setHeader('CF-Cache-Control', 'max-age=31536000')
+    res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
     res.setHeader('Content-Length', audioBuffer.length.toString())
     res.setHeader('Accept-Ranges', 'bytes')
     res.setHeader('ETag', `"${hashId}"`)

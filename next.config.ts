@@ -107,7 +107,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'CF-Cache-Control',  // CloudFlare 特定的快取控制
-            value: 'max-age=31536000'
+            value: 'max-age=31536000, stale-while-revalidate=86400'
           },
           {
             key: 'Access-Control-Allow-Origin',
@@ -127,35 +127,35 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: '/api/tts',
-        headers: [
-          {
-            key: 'Cache-Control', // 標準的 HTTP 快取控制
-            value: 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable'
-          },
-          {
-            key: 'CF-Cache-Control',  // CloudFlare 特定的快取控制
-            value: 'max-age=31536000'
-          },
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type',
-          },          
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-        ],
-      },
+      // {
+      //   source: '/api/tts',
+      //   headers: [
+      //     {
+      //       key: 'Cache-Control', // 標準的 HTTP 快取控制
+      //       value: 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable'
+      //     },
+      //     {
+      //       key: 'CF-Cache-Control',  // CloudFlare 特定的快取控制
+      //       value: 'max-age=31536000 stale-while-revalidate=86400'
+      //     },
+      //     {
+      //       key: 'Access-Control-Allow-Origin',
+      //       value: '*',
+      //     },
+      //     {
+      //       key: 'Access-Control-Allow-Methods',
+      //       value: 'GET, POST, OPTIONS',
+      //     },
+      //     {
+      //       key: 'Access-Control-Allow-Headers',
+      //       value: 'Content-Type',
+      //     },          
+      //     {
+      //       key: 'X-Content-Type-Options',
+      //       value: 'nosniff'
+      //     },
+      //   ],
+      // },
     ]
   },
 
