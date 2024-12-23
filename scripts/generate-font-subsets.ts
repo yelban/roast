@@ -15,6 +15,15 @@ const FONTS = [
   'KurewaGothicCjkJp-Bold'
 ]
 
+const FONT_OPTIONS = {
+  targetFormat: 'truetype',
+  features: {
+    maxp: {
+      maxZones: 2  // 設置為 2，這是最常見且安全的值
+    }
+  }
+}
+
 async function extractTextFromMenu(fontName: string): Promise<string> {
   // 只有這些字體需要完整的菜單文字
   const fullMenuFonts = ['uzura_font', 'JasonHandwriting2-SemiBold', 'KurewaGothicCjkTc-Bold', 'KurewaGothicCjkJp-Bold']
@@ -74,8 +83,8 @@ async function generateSubsets() {
       // 根據字體名稱提取所需字元
       const chars = await extractTextFromMenu(fontName)
       
-      // 生成子集
-      const subsetBuffer = await subsetFont(fontBuffer, chars)
+      // 使用修復選項生成子集
+      const subsetBuffer = await subsetFont(fontBuffer, chars, FONT_OPTIONS)
 
       // 儲存子集字體
       const outputPath = path.join(subsetsDir, `${fontName}.ttf`)

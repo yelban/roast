@@ -72,10 +72,6 @@ const nextConfig: NextConfig = {
             value: 'Content-Type',
           },
           {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains'
-          },
-          {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
           },
@@ -103,24 +99,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/api/tts',
+        source: '/api/tts/',  // 注意這裡添加了尾斜線
         headers: [
-          // {
-          //   key: 'Cache-Control',
-          //   value: 'public, max-age=31536000, immutable'
-          // },
           {
-            key: 'Cache-Control',
-            // 修改快取策略以支援 CloudFlare CDN
+            key: 'Cache-Control', // 標準的 HTTP 快取控制
             value: 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable'
           },
-          // CloudFlare 特定的快取控制標頭
           {
-            key: 'CDN-Cache-Control',
-            value: 'max-age=31536000'
-          },
-          {
-            key: 'Cloudflare-CDN-Cache-Control',
+            key: 'CF-Cache-Control',  // CloudFlare 特定的快取控制
             value: 'max-age=31536000'
           },
           {
@@ -136,9 +122,34 @@ const nextConfig: NextConfig = {
             value: 'Content-Type',
           },
           {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains'
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
           },
+        ],
+      },
+      {
+        source: '/api/tts',
+        headers: [
+          {
+            key: 'Cache-Control', // 標準的 HTTP 快取控制
+            value: 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable'
+          },
+          {
+            key: 'CF-Cache-Control',  // CloudFlare 特定的快取控制
+            value: 'max-age=31536000'
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type',
+          },          
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
@@ -150,6 +161,10 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     return [
+      {
+        source: '/api/tts',
+        destination: '/api/tts/',
+      },
       {
         source: '/api/:path*',
         destination: '/api/:path*',

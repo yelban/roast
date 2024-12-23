@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { generateHash } from '@/lib/utils'
 import { put } from '@vercel/blob'
+import { kv } from '@vercel/kv'
 
 // 快取模式設定
 const CACHE_MODE = process.env.CACHE_MODE || 'local' // 'local' | 'blob'
@@ -48,24 +49,61 @@ async function getBlobCache(hashId: string) {
   }
 }
 
+// 新增 Edge Cache 檢查函數
+async function getEdgeCache(hashId: string): Promise<Buffer | null> {
+  try {
+    const cachedData = await kv.get<Buffer>(`tts:${hashId}`)
+    if (cachedData) {
+      console.log('⚡ Edge Cache hit for:', hashId)
+      return cachedData
+    }
+    return null
+  } catch (error) {
+    console.error('Edge cache get error:', error)
+    return null
+  }
+}
+
 // 統一的快取介面
-async function getCachedAudio(hashId: string): Promise<Buffer | null> {
+async function getCachedAudio(hashId: string): Promise<{ buffer: Buffer | null, source: string }> {
+  // 1. 先檢查 Edge Cache
+  const edgeCache = await getEdgeCache(hashId)
+  if (edgeCache) {
+    console.log('⚡ Using Edge Cache')
+    // 確保返回的是 Buffer
+    return { buffer: Buffer.from(edgeCache), source: 'edge' }
+  }
+
+  // 2. 如果 Edge Cache 沒有命中，檢查本地快取
   if (CACHE_MODE === 'local') {
     const cachedFilePath = getCachedAudioPath(hashId)
     if (fs.existsSync(cachedFilePath)) {
       console.log('🎵 Using local cache')
-      return fs.readFileSync(cachedFilePath)
+      return { buffer: fs.readFileSync(cachedFilePath), source: 'local' }
     }
-    return null
+    return { buffer: null, source: 'miss' }
   } else {
     const blob = await getBlobCache(hashId)
     if (blob) {
       console.log('🌐 Using Vercel Blob cache')
       const response = await fetch(blob.url)
+      if (!response.ok) throw new Error('Blob fetch failed')
       const arrayBuffer = await response.arrayBuffer()
-      return Buffer.from(arrayBuffer)
+      const audioBuffer = Buffer.from(arrayBuffer)
+
+      // 存入 Edge Cache
+      try {
+        await kv.set(`tts:${hashId}`, audioBuffer, {
+          ex: 86400 * 365
+        })
+        console.log('💾 Saved to Edge Cache')
+      } catch (error) {
+        console.error('Edge cache set error:', error)
+      }
+
+      return { buffer: audioBuffer, source: 'blob' }
     }
-    return null
+    return { buffer: null, source: 'miss' }
   }
 }
 
@@ -78,6 +116,14 @@ async function setCachedAudio(hashId: string, audioBuffer: Buffer) {
       console.error('Local cache write error:', error)
     }
   } else {
+
+    // 先儲存到 Edge Cache
+    await kv.set(`tts:${hashId}`, audioBuffer, {
+      ex: 86400 * 365 // 365 天過期
+    })
+    console.log('💾 Saved to Edge Cache')
+
+    // 再儲存到 Blob
     await setBlobCache(hashId, audioBuffer)
   }
 }
@@ -109,11 +155,17 @@ async function cleanupOldCache() {
 
 const logCacheStatus = (req: NextApiRequest, hashId: string, cacheSource: string) => {
   const cfCacheStatus = req.headers['cf-cache-status']  // Cloudflare 快取狀態
+  // 可能的值：
+  // - HIT: CloudFlare 快取命中
+  // - MISS: 快取未命中
+  // - BYPASS: 跳過快取
+  // - DYNAMIC: 動態內容
   const cfRay = req.headers['cf-ray']  // Cloudflare Ray ID
   const cfCountry = req.headers['cf-ipcountry']  // 國家資訊
 
   console.log(`Cache Status for ${hashId}:`, {
     source: cacheSource,
+    edgeCache: cacheSource === 'edge' ? 'HIT' : 'MISS',
     cfStatus: cfCacheStatus,
     cfRay,
     cfCountry,
@@ -158,13 +210,14 @@ export default async function handler(
   }
     
     // 檢查快取
-    const cachedAudio = await getCachedAudio(hashId)
+    const { buffer: cachedAudio, source: cacheSource } = await getCachedAudio(hashId)
     if (cachedAudio) {
-      logCacheStatus(req, hashId, 'CACHE_HIT')
+      logCacheStatus(req, hashId, cacheSource)
       res.setHeader('Content-Type', 'audio/mpeg')
       res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
-      res.setHeader('CDN-Cache-Control', 'max-age=31536000')
-      res.setHeader('Cloudflare-CDN-Cache-Control', 'max-age=31536000')
+      res.setHeader('CF-Cache-Control', 'max-age=31536000')
+      res.setHeader('Content-Length', cachedAudio.length.toString())
+      res.setHeader('Accept-Ranges', 'bytes')
       res.setHeader('ETag', `"${hashId}"`)
       res.setHeader('Vary', 'Accept')
       // Cloudflare 特定的優化
@@ -237,8 +290,9 @@ export default async function handler(
 
     res.setHeader('Content-Type', 'audio/mpeg')
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
-    res.setHeader('CDN-Cache-Control', 'max-age=31536000')
-    res.setHeader('Cloudflare-CDN-Cache-Control', 'max-age=31536000')
+    res.setHeader('CF-Cache-Control', 'max-age=31536000')
+    res.setHeader('Content-Length', audioBuffer.length.toString())
+    res.setHeader('Accept-Ranges', 'bytes')
     res.setHeader('ETag', `"${hashId}"`)
     res.setHeader('Vary', 'Accept')
     // Cloudflare 特定的優化
