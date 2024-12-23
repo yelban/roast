@@ -72,6 +72,10 @@ const nextConfig: NextConfig = {
             value: 'Content-Type',
           },
           {
+            key: 'Access-Control-Expose-Headers',
+            value: 'CF-Cache-Status, CF-Ray, CF-IPCountry'
+          },
+          {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains'
           },
@@ -150,6 +154,14 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     return [
+      {
+        source: '/api/tts',
+        destination: '/api/tts'
+      },
+      {
+        source: '/api/tts/',
+        destination: '/api/tts'  // 統一導向無斜線版本
+      },
       {
         source: '/api/:path*',
         destination: '/api/:path*',
