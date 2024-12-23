@@ -8,7 +8,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    // res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')

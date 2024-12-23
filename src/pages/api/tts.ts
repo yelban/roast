@@ -224,7 +224,7 @@ export default async function handler(
       res.setHeader('CF-Cache-Tags', `tts-${hashId}`)  // 用於快取標記
       res.setHeader('CF-Cache-Status', 'DYNAMIC')
       // 安全性標頭
-      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+      // res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
       res.setHeader('X-Content-Type-Options', 'nosniff')
 
       res.send(cachedAudio)
@@ -299,7 +299,7 @@ export default async function handler(
     res.setHeader('CF-Cache-Tags', `tts-${hashId}`)  // 用於快取標記
     res.setHeader('CF-Cache-Status', 'DYNAMIC')
     // 安全性標頭
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    // res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.send(audioBuffer)
     return
