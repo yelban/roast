@@ -148,7 +148,8 @@ export default function Menu() {
       const basePath = publicRuntimeConfig?.root || ''
       const protocol = window.location.protocol
       const host = window.location.host
-      const apiUrl = `${protocol}//${host}${basePath}/api/tts/?text=${encodeURIComponent(text)}`
+      const encodedText = encodeURIComponent(text)
+      const apiUrl = `${protocol}//${host}${basePath}/api/tts/${encodedText}/`
 
       const playAudio = async (audioResponse: Response) => {
         const blob = await audioResponse.blob()

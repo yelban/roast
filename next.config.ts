@@ -99,14 +99,14 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/api/tts/',  // 注意這裡添加了尾斜線
+        source: '/api/tts/:text',
         headers: [
           {
-            key: 'Cache-Control', // 標準的 HTTP 快取控制
+            key: 'Cache-Control',
             value: 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable'
           },
           {
-            key: 'CF-Cache-Control',  // CloudFlare 特定的快取控制
+            key: 'CF-Cache-Control',
             value: 'max-age=31536000, stale-while-revalidate=86400'
           },
           {
@@ -162,8 +162,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/tts',
-        destination: '/api/tts/',
+        source: '/api/tts/:text',
+        destination: '/api/tts/:text',
       },
       {
         source: '/api/:path*',
