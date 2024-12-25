@@ -1,3 +1,6 @@
+/// <reference lib="webworker" />
+/// <reference lib="es2015" />
+
 declare let self: ServiceWorkerGlobalScope & typeof globalThis;
 
 import { precacheAndRoute } from 'workbox-precaching'
