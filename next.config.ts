@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import path from 'path';
+import { InjectManifest } from 'workbox-webpack-plugin';
 
 const nextConfig: NextConfig = {
   // 開啟 React 嚴格模式
@@ -50,6 +51,18 @@ const nextConfig: NextConfig = {
       }
     })
 
+    // 只在客戶端生產環境建置中加入 Service Worker
+    if (!isServer && !dev) {
+      config.plugins.push(
+        new InjectManifest({
+          swSrc: './public/sw.js',
+          swDest: './public/sw.js',
+          exclude: [/\.map$/, /^manifest.*\.js(?:on)?$/],
+        })
+      );
+    }
+
+    // 返回修改後的配置
     return config;
   },
 
@@ -131,7 +144,20 @@ const nextConfig: NextConfig = {
             value: '*',
           }
         ],
-      }
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+        ],
+      },
     ]
   },
 };
