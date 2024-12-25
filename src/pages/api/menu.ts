@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import menuData from '@/data/data.json'
+import { generateHash } from '@/lib/utils'
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -7,8 +8,34 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       throw new Error('Invalid menu data')
     }
 
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate')
-    // res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    // 生成菜單資料的 ETag
+    const menuHash = generateHash(JSON.stringify(menuData))
+
+    // 檢查客戶端快取
+    const ifNoneMatch = req.headers['if-none-match']
+
+    if (ifNoneMatch === `"${menuHash}"`) {
+      // 如果客戶端已有最新版本，返回 304
+      res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
+      res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
+      res.setHeader('ETag', `"${menuHash}"`)
+      res.status(304).end()
+      return
+    }
+
+    // 設置快取相關標頭
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
+    res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
+    res.setHeader('ETag', `"${menuHash}"`)
+    res.setHeader('Last-Modified', new Date().toUTCString())
+    res.setHeader('Vary', 'Accept')
+    
+    // Cloudflare 特定的優化
+    res.setHeader('CF-Cache-Tags', `menu-${menuHash}`)
+    res.setHeader('CF-Cache-Status', 'DYNAMIC')
+
+    // 安全性標頭
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')

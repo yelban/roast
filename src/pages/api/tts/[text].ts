@@ -196,14 +196,13 @@ export default async function handler(
     
     // 檢查 If-None-Match 標頭
     const ifNoneMatch = req.headers['if-none-match']
-    const ifModifiedSince = req.headers['if-modified-since']
+    // const ifModifiedSince = req.headers['if-modified-since']
     // if (ifNoneMatch === `"${hashId}"`) {
     //   console.log('🎵 Client cache hit')
     //   res.status(304).end()
     //   return
     // }
-    if (ifNoneMatch === `"${hashId}"` || 
-      (ifModifiedSince && new Date(ifModifiedSince) >= new Date())) {
+    if (ifNoneMatch === `"${hashId}"`) {
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
     res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
     res.setHeader('ETag', `"${hashId}"`)

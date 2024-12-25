@@ -170,7 +170,8 @@ export default function Menu() {
         headers: {
           'Accept': 'audio/mpeg',
           'If-None-Match': `"${textHash}"`,
-        }
+        },
+        cache: 'force-cache', // 強制使用快取
       })
 
       if (response.status === 304) {
@@ -269,7 +270,7 @@ export default function Menu() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent 
-          className="dialog-content bg-white rounded-lg max-w-[95%] md:max-w-lg"
+          className="dialog-content bg-white rounded-lg max-w-[95%] md:max-w-lg focus:outline-none focus:ring-0"
           onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
           onTouchEnd={handleDialogTouchEnd}
         >
