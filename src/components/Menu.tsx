@@ -113,7 +113,8 @@ export default function Menu() {
     handleTouchEvent(
       e,
       touchStart,
-      () => setIsDialogOpen(false)
+      () => setIsDialogOpen(false),  // 向左滑動時關閉
+      () => setIsDialogOpen(false)   // 向右滑動時也關閉
     )
     setTouchStart(null)
   }
