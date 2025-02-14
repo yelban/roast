@@ -4,6 +4,7 @@ import path from 'path'
 import { generateHash } from '@/lib/utils'
 import { put } from '@vercel/blob'
 import { kv } from '@vercel/kv'
+import 'server-only'
 
 // 快取模式設定
 const CACHE_MODE = process.env.CACHE_MODE || 'local' // 'local' | 'blob'
@@ -169,6 +170,43 @@ const logCacheStatus = (req: NextApiRequest, hashId: string, cacheSource: string
   });
 };
 
+// 全域變數，用於快取 token 和 token 過期時間
+let cachedToken: string | null = null
+let tokenExpiration: Date | null = null
+
+// 異步函數，用於取得 Azure TTS token，包含快取邏輯
+async function fetchAzureToken(): Promise<string> {
+  // 如果 token 已快取且未過期，直接返回快取 token
+  if (cachedToken && tokenExpiration && tokenExpiration > new Date()) {
+    console.log('🚀 Using cached Azure TTS token');
+    return cachedToken;
+  }
+
+  console.time('azureTTS-fetchToken'); // 計時開始
+  const REGION = process.env.AZURE_SPEECH_REGION;
+  const AZURE_TOKEN_ENDPOINT = `https://${REGION}.api.cognitive.microsoft.com/sts/v1.0/issuetoken`;
+
+  const tokenResponse = await fetch(AZURE_TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY!,
+    },
+  });
+  console.timeEnd('azureTTS-fetchToken');   // 計時結束
+
+  if (!tokenResponse.ok) {
+    throw new Error(`Failed to get access token from Azure TTS: ${tokenResponse.status} ${tokenResponse.statusText}`);
+  }
+
+  const accessToken = await tokenResponse.text();
+
+  // 快取 token，設定 20 秒後過期 (可根據實際情況調整)
+  cachedToken = accessToken;
+  tokenExpiration = new Date(new Date().getTime() + 20 * 1000); // 20 seconds
+  console.log('💾 Fetched and cached new Azure TTS token');
+  return accessToken;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -199,9 +237,9 @@ export default async function handler(
     }
 
     // 檢查快取
-    console.time(`getCachedAudio-${hashId}`); // 計時開始
+    console.time(`getCachedAudio-${hashId}`);
     const { buffer: cachedAudio, source: cacheSource } = await getCachedAudio(hashId);
-    console.timeEnd(`getCachedAudio-${hashId}`);   // 計時結束
+    console.timeEnd(`getCachedAudio-${hashId}`);
 
     if (cachedAudio) {
       logCacheStatus(req, hashId, cacheSource);
@@ -222,38 +260,14 @@ export default async function handler(
 
     console.log('🎙️ Fetching from Azure TTS');
 
-    // 從 Azure 取得語音
-    console.time(`azureTTS-getToken-${hashId}`); // 計時開始
-    const tokenResponse = await fetch(
-      `https://${process.env.AZURE_SPEECH_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken`,
-      {
-        method: 'POST',
-        headers: {
-          'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY!,
-        },
-      }
-    );
-    console.timeEnd(`azureTTS-getToken-${hashId}`);   // 計時結束
+    // 從 Azure 取得語音 - 使用快取 token 函數
+    const accessToken = await fetchAzureToken();
+    const REGION = process.env.AZURE_SPEECH_REGION;
+    const AZURE_COGNITIVE_ENDPOINT = `https://${REGION}.tts.speech.microsoft.com/cognitiveservices/v1`;
 
-    if (!tokenResponse.ok) {
-      throw new Error('Failed to get access token');
-    }
-
-    const accessToken = await tokenResponse.text();
-
-    const ssml = `
-      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP">
-        <voice name="ja-JP-NanamiNeural">
-          <prosody volume="+100%">
-            ${text}
-          </prosody>
-        </voice>
-      </speak>
-    `;
-
-    console.time(`azureTTS-synthesize-${hashId}`); // 計時開始
+    console.time(`azureTTS-synthesize-${hashId}`);
     const ttsResponse = await fetch(
-      `https://${process.env.AZURE_SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`,
+      AZURE_COGNITIVE_ENDPOINT,
       {
         method: 'POST',
         headers: {
@@ -262,21 +276,21 @@ export default async function handler(
           'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
           'User-Agent': 'YourAppName',
         },
-        body: ssml,
+        body: `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='ja-JP'><voice name='ja-JP-NanamiNeural'><prosody volume='+100%'>${text}</prosody></voice></speak>`, // 直接在 fetch 呼叫中建立 SSML 字串
       }
     );
-    console.timeEnd(`azureTTS-synthesize-${hashId}`);   // 計時結束
+    console.timeEnd(`azureTTS-synthesize-${hashId}`);
 
     if (!ttsResponse.ok) {
-      throw new Error('TTS API request failed');
+      throw new Error(`TTS API request failed: ${ttsResponse.status} ${ttsResponse.statusText}`);
     }
 
     const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
 
     // 儲存快取
-    console.time(`setCachedAudio-${hashId}`); // 計時開始
+    console.time(`setCachedAudio-${hashId}`);
     await setCachedAudio(hashId, audioBuffer);
-    console.timeEnd(`setCachedAudio-${hashId}`);   // 計時結束
+    console.timeEnd(`setCachedAudio-${hashId}`);
 
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
@@ -291,9 +305,10 @@ export default async function handler(
     res.send(audioBuffer);
     return;
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('TTS error:', error);
-    res.status(500).json({ message: 'TTS generation failed' });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    res.status(500).json({ message: 'TTS generation failed', error: errorMessage });
     return;
   }
 } 
