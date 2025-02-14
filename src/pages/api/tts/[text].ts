@@ -154,14 +154,9 @@ async function cleanupOldCache() {
 }
 
 const logCacheStatus = (req: NextApiRequest, hashId: string, cacheSource: string) => {
-  const cfCacheStatus = req.headers['cf-cache-status']  // Cloudflare 快取狀態
-  // 可能的值：
-  // - HIT: CloudFlare 快取命中
-  // - MISS: 快取未命中
-  // - BYPASS: 跳過快取
-  // - DYNAMIC: 動態內容
-  const cfRay = req.headers['cf-ray']  // Cloudflare Ray ID
-  const cfCountry = req.headers['cf-ipcountry']  // 國家資訊
+  const cfCacheStatus = req.headers['cf-cache-status']
+  const cfRay = req.headers['cf-ray']
+  const cfCountry = req.headers['cf-ipcountry']
 
   console.log(`Cache Status for ${hashId}:`, {
     source: cacheSource,
@@ -171,70 +166,64 @@ const logCacheStatus = (req: NextApiRequest, hashId: string, cacheSource: string
     cfCountry,
     userAgent: req.headers['user-agent'],
     timestamp: new Date().toISOString()
-  })
-}
+  });
+};
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== 'GET') {
-    res.status(405).end()
-    return
+    res.status(405).end();
+    return;
   }
 
-  // 從路徑參數取得文字
-  const { text } = req.query
+  const { text } = req.query;
   if (!text || typeof text !== 'string') {
-    res.status(400).json({ message: 'Text is required' })
-    return
+    res.status(400).json({ message: 'Text is required' });
+    return;
   }
 
   try {
-    const hashId = generateHashId(text)
-    console.log('hashId', hashId)
-    
-    // 檢查 If-None-Match 標頭
-    const ifNoneMatch = req.headers['if-none-match']
-    // const ifModifiedSince = req.headers['if-modified-since']
-    // if (ifNoneMatch === `"${hashId}"`) {
-    //   console.log('🎵 Client cache hit')
-    //   res.status(304).end()
-    //   return
-    // }
-    if (ifNoneMatch === `"${hashId}"`) {
-    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
-    res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
-    res.setHeader('ETag', `"${hashId}"`)
-    res.status(304).end()
-    return
-  }
-    
-    // 檢查快取
-    const { buffer: cachedAudio, source: cacheSource } = await getCachedAudio(hashId)
-    if (cachedAudio) {
-      logCacheStatus(req, hashId, cacheSource)
-      res.setHeader('Content-Type', 'audio/mpeg')
-      res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
-      res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
-      res.setHeader('Content-Length', cachedAudio.length.toString())
-      res.setHeader('Accept-Ranges', 'bytes')
-      res.setHeader('ETag', `"${hashId}"`)
-      res.setHeader('Vary', 'Accept')
-      // Cloudflare 特定的優化
-      res.setHeader('CF-Cache-Tags', `tts-${hashId}`)  // 用於快取標記
-      res.setHeader('CF-Cache-Status', 'DYNAMIC')
-      // 安全性標頭
-      // res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-      res.setHeader('X-Content-Type-Options', 'nosniff')
+    const hashId = generateHashId(text);
+    console.log('hashId', hashId);
 
-      res.send(cachedAudio)
-      return
+    // 檢查 If-None-Match 標頭
+    const ifNoneMatch = req.headers['if-none-match'];
+    if (ifNoneMatch === `"${hashId}"`) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
+      res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400');
+      res.setHeader('ETag', `"${hashId}"`);
+      res.status(304).end();
+      return;
     }
 
-    console.log('🎙️ Fetching from Azure TTS')
-    
-    // 如果沒有快取，從 Azure 取得語音
+    // 檢查快取
+    console.time(`getCachedAudio-${hashId}`); // 計時開始
+    const { buffer: cachedAudio, source: cacheSource } = await getCachedAudio(hashId);
+    console.timeEnd(`getCachedAudio-${hashId}`);   // 計時結束
+
+    if (cachedAudio) {
+      logCacheStatus(req, hashId, cacheSource);
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
+      res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400');
+      res.setHeader('Content-Length', cachedAudio.length.toString());
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('ETag', `"${hashId}"`);
+      res.setHeader('Vary', 'Accept');
+      res.setHeader('CF-Cache-Tags', `tts-${hashId}`);
+      res.setHeader('CF-Cache-Status', 'DYNAMIC');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+
+      res.send(cachedAudio);
+      return;
+    }
+
+    console.log('🎙️ Fetching from Azure TTS');
+
+    // 從 Azure 取得語音
+    console.time(`azureTTS-getToken-${hashId}`); // 計時開始
     const tokenResponse = await fetch(
       `https://${process.env.AZURE_SPEECH_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken`,
       {
@@ -243,13 +232,14 @@ export default async function handler(
           'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY!,
         },
       }
-    )
+    );
+    console.timeEnd(`azureTTS-getToken-${hashId}`);   // 計時結束
 
     if (!tokenResponse.ok) {
-      throw new Error('Failed to get access token')
+      throw new Error('Failed to get access token');
     }
 
-    const accessToken = await tokenResponse.text()
+    const accessToken = await tokenResponse.text();
 
     const ssml = `
       <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP">
@@ -259,8 +249,9 @@ export default async function handler(
           </prosody>
         </voice>
       </speak>
-    `
+    `;
 
+    console.time(`azureTTS-synthesize-${hashId}`); // 計時開始
     const ttsResponse = await fetch(
       `https://${process.env.AZURE_SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`,
       {
@@ -273,41 +264,36 @@ export default async function handler(
         },
         body: ssml,
       }
-    )
+    );
+    console.timeEnd(`azureTTS-synthesize-${hashId}`);   // 計時結束
 
     if (!ttsResponse.ok) {
-      throw new Error('TTS API request failed')
+      throw new Error('TTS API request failed');
     }
 
-    const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer())
-    
+    const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
+
     // 儲存快取
-    await setCachedAudio(hashId, audioBuffer)
+    console.time(`setCachedAudio-${hashId}`); // 計時開始
+    await setCachedAudio(hashId, audioBuffer);
+    console.timeEnd(`setCachedAudio-${hashId}`);   // 計時結束
 
-    // 瀏覽器本地快取（通過 ETag 和 Cache-Control）
-    // CloudFlare CDN 快取（通過 CDN-Cache-Control 和頁面規則）
-    // Vercel Edge 快取（通過 s-maxage）
-    // Vercel Blob 存儲（現有的實現）
-
-    res.setHeader('Content-Type', 'audio/mpeg')
-    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
-    res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
-    res.setHeader('Content-Length', audioBuffer.length.toString())
-    res.setHeader('Accept-Ranges', 'bytes')
-    res.setHeader('ETag', `"${hashId}"`)
-    res.setHeader('Vary', 'Accept')
-    // Cloudflare 特定的優化
-    res.setHeader('CF-Cache-Tags', `tts-${hashId}`)  // 用於快取標記
-    res.setHeader('CF-Cache-Status', 'DYNAMIC')
-    // 安全性標頭
-    // res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-    res.setHeader('X-Content-Type-Options', 'nosniff')
-    res.send(audioBuffer)
-    return
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
+    res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400');
+    res.setHeader('Content-Length', audioBuffer.length.toString());
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('ETag', `"${hashId}"`);
+    res.setHeader('Vary', 'Accept');
+    res.setHeader('CF-Cache-Tags', `tts-${hashId}`);
+    res.setHeader('CF-Cache-Status', 'DYNAMIC');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.send(audioBuffer);
+    return;
 
   } catch (error) {
-    console.error('TTS error:', error)
-    res.status(500).json({ message: 'TTS generation failed' })
-    return
+    console.error('TTS error:', error);
+    res.status(500).json({ message: 'TTS generation failed' });
+    return;
   }
 } 
