@@ -289,7 +289,7 @@ export default function Menu() {
           const r2TimeoutId = setTimeout(() => r2Controller.abort(), 15000) // 15 秒超時
           
           // 首次嘗試使用正常快取
-          let r2Response = await fetch(r2AudioUrl, {
+          const r2Response = await fetch(r2AudioUrl, {
             method: 'GET',
             mode: 'cors',
             cache: 'default',
