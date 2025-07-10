@@ -12,9 +12,12 @@ import getConfig from 'next/config'
 import { useLanguageStore, languageOrder } from '@/store/languageStore'
 import { getFontClass, getTitleFontClass } from '@/config/fonts'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import { Volume2 } from 'lucide-react'
 import { FontWrapper } from '@/components/FontWrapper'
 import { generateHash } from '@/lib/utils'
+import { recordCacheUsage } from '@/lib/cacheMetrics'
+import { playStreamingAudio, StreamingAudioPlayer } from '@/lib/audioStreaming'
 
 interface SelectedItem extends MenuItem {
   categoryName: {
@@ -31,6 +34,8 @@ export default function Menu() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [isTTSLoading, setIsTTSLoading] = useState(false)
+  const [audioPlayer, setAudioPlayer] = useState<StreamingAudioPlayer | null>(null)
+  const [audioProgress, setAudioProgress] = useState<{ loaded: number; total: number } | null>(null)
 
   const loadMenuData = async () => {
     try {
@@ -141,8 +146,28 @@ export default function Menu() {
   }
 
   const playTTS = async (text: string) => {
+    const startTime = performance.now()
+    
     try {
+      // 如果正在播放，先停止
+      if (isPlaying) {
+        setIsPlaying(false)
+        if (audioPlayer) {
+          audioPlayer.stop()
+          setAudioPlayer(null)
+        }
+        return // 直接返回，不重新播放同一個音訊
+      }
+      
       setIsTTSLoading(true)
+      setAudioProgress(null)
+      
+      // 清理之前的播放器
+      if (audioPlayer) {
+        audioPlayer.stop()
+        setAudioPlayer(null)
+      }
+      
       const textHash = generateHash(text)
       
       const { publicRuntimeConfig } = getConfig()
@@ -153,52 +178,107 @@ export default function Menu() {
       const apiUrl = `${protocol}//${host}${basePath}/api/tts/${encodedText}/`
 
       const playAudio = async (audioResponse: Response) => {
+        // 記錄快取使用指標
+        const responseTime = performance.now() - startTime
+        recordCacheUsage(textHash, text, responseTime)
+        
+        console.log('開始播放音訊:', text)
+        
+        // 簡化為傳統播放方式，避免流式播放的複雜性
         const blob = await audioResponse.blob()
+        console.log('音訊 Blob 大小:', blob.size, 'bytes')
+        
         const blobUrl = URL.createObjectURL(blob)
         const audio = new Audio()
+        audio.preload = 'auto'
         audio.src = blobUrl
         
+        // 設定事件監聽器
+        audio.onloadstart = () => console.log('音訊開始載入')
+        audio.oncanplay = () => console.log('音訊可以播放')
+        audio.onplay = () => {
+          console.log('音訊開始播放')
+          setIsPlaying(true)
+        }
         audio.onended = () => {
+          console.log('音訊播放結束')
           setIsPlaying(false)
+          setAudioProgress(null)
           URL.revokeObjectURL(blobUrl)
         }
-
-        setIsPlaying(true)
-        return audio.play()
-      }
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Accept': 'audio/mpeg',
-          'If-None-Match': `"${textHash}"`,
-        },
-        cache: 'force-cache', // 強制使用快取
-      })
-
-      if (response.status === 304) {
-        const cacheResponse = await caches.match(apiUrl)
-        if (!cacheResponse) {
-          const freshResponse = await fetch(apiUrl, {
-            headers: { 'Accept': 'audio/mpeg' }
-          })
-          if (!freshResponse.ok) throw new Error('TTS request failed')
-          
-          const cache = await caches.open('tts-cache')
-          await cache.put(apiUrl, freshResponse.clone())
-          
-          return await playAudio(freshResponse)
+        audio.onerror = (e) => {
+          console.error('音訊播放錯誤:', e)
+          setIsPlaying(false)
+          setAudioProgress(null)
+          URL.revokeObjectURL(blobUrl)
         }
-        return await playAudio(cacheResponse)
+        
+        // 等待音訊載入完成後再播放
+        return new Promise((resolve, reject) => {
+          audio.oncanplaythrough = async () => {
+            try {
+              console.log('音訊完全載入，開始播放')
+              await audio.play()
+              resolve(audio)
+            } catch (playError) {
+              console.error('播放錯誤:', playError)
+              reject(playError)
+            }
+          }
+          
+          audio.onerror = () => {
+            reject(new Error('音訊載入失敗'))
+          }
+          
+          // 開始載入音訊
+          audio.load()
+        })
       }
 
-      if (!response.ok) throw new Error('TTS request failed')
+      // 添加客戶端超時控制
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 35000) // 35 秒超時
       
-      const cache = await caches.open('tts-cache')
-      await cache.put(apiUrl, response.clone())
-      
-      return await playAudio(response)
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Accept': 'audio/mpeg',
+            'If-None-Match': `"${textHash}"`,
+          },
+          cache: 'force-cache', // 強制使用快取
+          signal: controller.signal
+        })
+
+        if (response.status === 304) {
+          const cacheResponse = await caches.match(apiUrl)
+          if (!cacheResponse) {
+            const freshResponse = await fetch(apiUrl, {
+              headers: { 'Accept': 'audio/mpeg' },
+              signal: controller.signal
+            })
+            if (!freshResponse.ok) throw new Error('TTS request failed')
+            
+            const cache = await caches.open('tts-cache')
+            await cache.put(apiUrl, freshResponse.clone())
+            
+            return await playAudio(freshResponse)
+          }
+          return await playAudio(cacheResponse)
+        }
+
+        if (!response.ok) throw new Error('TTS request failed')
+        
+        const cache = await caches.open('tts-cache')
+        await cache.put(apiUrl, response.clone())
+        
+        return await playAudio(response)
+      } finally {
+        clearTimeout(timeoutId)
+      }
     } catch (error) {
       console.error('TTS error:', error)
+      setIsPlaying(false)
+      setAudioProgress(null)
     } finally {
       setIsTTSLoading(false)
     }
@@ -288,37 +368,52 @@ export default function Menu() {
                   <div className="text-xl text-red-900 font-bold text-center">
                     {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    disabled={isTTSLoading || isPlaying}
-                    className={`h-8 w-8 pt-2 inline-flex items-center justify-center hover:bg-gray-200 relative
-                      focus-visible:ring-0 focus-visible:ring-offset-0
-                      ${isTTSLoading ? 'animate-pulse' : ''}
-                      ${isPlaying ? 'text-blue-600' : 'text-gray-600'}
-                    `}
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.stopPropagation()
-                      if (selectedItem?.name?.['ja']) {
-                        playTTS(selectedItem.name['ja'])
-                      }
-                    }}
-                  >
-                    {isTTSLoading ? (
-                      <div className="h-5 w-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <Volume2 className="h-5 w-5 fill-current" />
-                        {isPlaying && (
-                          <div className="absolute -right-[6px] flex items-center gap-[2px]">
-                            <div className="w-[2px] h-[8px] bg-blue-600 animate-sound-wave-1" />
-                            <div className="w-[2px] h-[12px] bg-blue-600 animate-sound-wave-2" />
-                            <div className="w-[2px] h-[16px] bg-blue-600 animate-sound-wave-3" />
-                          </div>
-                        )}
-                      </>
+                  <div className="flex flex-col items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={isTTSLoading || isPlaying}
+                      className={`h-8 w-8 pt-2 inline-flex items-center justify-center hover:bg-gray-200 relative
+                        focus-visible:ring-0 focus-visible:ring-offset-0
+                        ${isTTSLoading ? 'animate-pulse' : ''}
+                        ${isPlaying ? 'text-blue-600' : 'text-gray-600'}
+                      `}
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.stopPropagation()
+                        if (selectedItem?.name?.['ja']) {
+                          playTTS(selectedItem.name['ja'])
+                        }
+                      }}
+                    >
+                      {isTTSLoading ? (
+                        <div className="h-5 w-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <Volume2 className="h-5 w-5 fill-current" />
+                          {isPlaying && (
+                            <div className="absolute -right-[6px] flex items-center gap-[2px]">
+                              <div className="w-[2px] h-[8px] bg-blue-600 animate-sound-wave-1" />
+                              <div className="w-[2px] h-[12px] bg-blue-600 animate-sound-wave-2" />
+                              <div className="w-[2px] h-[16px] bg-blue-600 animate-sound-wave-3" />
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </Button>
+                    
+                    {/* 下載進度條 */}
+                    {audioProgress && audioProgress.total > 0 && (
+                      <div className="w-20 flex flex-col items-center gap-1">
+                        <Progress 
+                          value={(audioProgress.loaded / audioProgress.total) * 100} 
+                          className="h-1 w-full"
+                        />
+                        <span className="text-xs text-gray-500">
+                          {Math.round((audioProgress.loaded / audioProgress.total) * 100)}%
+                        </span>
+                      </div>
                     )}
-                  </Button>
+                  </div>
                 </div>
               </DialogTitle>
               <DialogDescription className="sr-only">商品詳細資訊</DialogDescription>

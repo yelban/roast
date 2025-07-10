@@ -2,8 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import fs from 'fs'
 import path from 'path'
 import { generateHash } from '@/lib/utils'
-import { put } from '@vercel/blob'
-import { kv } from '@vercel/kv'
+import { getCachedAudio, setCachedAudio } from '@/lib/r2CacheFetch'
 import 'server-only'
 
 // 快取模式設定
@@ -41,93 +40,30 @@ async function setBlobCache(hashId: string, audioBuffer: Buffer) {
 
 async function getBlobCache(hashId: string) {
   try {
-    const response = await fetch(`${process.env.BLOB_STORE_URL}/tts-cache/${hashId}.mp3`)
-    if (!response.ok) return null
-    return response
+    // 直接返回 Blob URL，避免預先 fetch
+    const blobUrl = `${process.env.BLOB_STORE_URL}/tts-cache/${hashId}.mp3`
+    // 使用 HEAD 請求檢查檔案是否存在
+    const response = await fetch(blobUrl, { method: 'HEAD' })
+    return response.ok ? { url: blobUrl, exists: true } : null
   } catch (error) {
-    console.error('Blob cache get error:', error)
+    console.error('Blob cache check error:', error)
     return null
   }
 }
 
-// 新增 Edge Cache 檢查函數
-async function getEdgeCache(hashId: string): Promise<Buffer | null> {
-  try {
-    const cachedData = await kv.get<Buffer>(`tts:${hashId}`)
-    if (cachedData) {
-      console.log('⚡ Edge Cache hit for:', hashId)
-      return cachedData
-    }
-    return null
-  } catch (error) {
-    console.error('Edge cache get error:', error)
-    return null
-  }
+// 從 Blob 獲取音訊資料
+async function fetchBlobAudio(blobUrl: string): Promise<Buffer> {
+  const response = await fetch(blobUrl)
+  if (!response.ok) throw new Error(`Blob fetch failed: ${response.status}`)
+  const arrayBuffer = await response.arrayBuffer()
+  return Buffer.from(arrayBuffer)
 }
 
-// 統一的快取介面
-async function getCachedAudio(hashId: string): Promise<{ buffer: Buffer | null, source: string }> {
-  // 1. 先檢查 Edge Cache
-  const edgeCache = await getEdgeCache(hashId)
-  if (edgeCache) {
-    console.log('⚡ Using Edge Cache')
-    // 確保返回的是 Buffer
-    return { buffer: Buffer.from(edgeCache), source: 'edge' }
-  }
+// Edge Cache 已停用，改用 Cloudflare R2
 
-  // 2. 如果 Edge Cache 沒有命中，檢查本地快取
-  if (CACHE_MODE === 'local') {
-    const cachedFilePath = getCachedAudioPath(hashId)
-    if (fs.existsSync(cachedFilePath)) {
-      console.log('🎵 Using local cache')
-      return { buffer: fs.readFileSync(cachedFilePath), source: 'local' }
-    }
-    return { buffer: null, source: 'miss' }
-  } else {
-    const blob = await getBlobCache(hashId)
-    if (blob) {
-      console.log('🌐 Using Vercel Blob cache')
-      const response = await fetch(blob.url)
-      if (!response.ok) throw new Error('Blob fetch failed')
-      const arrayBuffer = await response.arrayBuffer()
-      const audioBuffer = Buffer.from(arrayBuffer)
+// 舊版本快取介面已移除，現在使用 r2CacheS3 統一介面
 
-      // 存入 Edge Cache
-      try {
-        await kv.set(`tts:${hashId}`, audioBuffer, {
-          ex: 86400 * 365
-        })
-        console.log('💾 Saved to Edge Cache')
-      } catch (error) {
-        console.error('Edge cache set error:', error)
-      }
-
-      return { buffer: audioBuffer, source: 'blob' }
-    }
-    return { buffer: null, source: 'miss' }
-  }
-}
-
-async function setCachedAudio(hashId: string, audioBuffer: Buffer) {
-  if (CACHE_MODE === 'local') {
-    try {
-      ensureAudioDirectory()
-      fs.writeFileSync(getCachedAudioPath(hashId), audioBuffer)
-    } catch (error) {
-      console.error('Local cache write error:', error)
-    }
-  } else {
-
-    // 先儲存到 Edge Cache
-    await kv.set(`tts:${hashId}`, audioBuffer, {
-      ex: 86400 * 365 // 365 天過期
-    })
-    console.log('💾 Saved to Edge Cache')
-
-    // 再儲存到 Blob
-    await setBlobCache(hashId, audioBuffer)
-  }
-}
+// 舊版本 setCachedAudio 已移除，現在使用 r2CacheS3 統一介面
 
 // 快取清理函數
 async function cleanupOldCache() {
@@ -170,50 +106,81 @@ const logCacheStatus = (req: NextApiRequest, hashId: string, cacheSource: string
   });
 };
 
-// 1. 在檔案模組層級宣告兩個全域變數
+// 1. 在檔案模組層級宣告全域變數
 let cachedToken: string | null = null
 let tokenExpiration: Date | null = null
+let tokenPromise: Promise<string> | null = null
 
-// 2. 提供專門的函式來抓取 Token：有效期內直接用舊 Token
+// 2. 內部執行 Token 獲取的函式
+async function performTokenFetch(): Promise<string> {
+  console.time('azureTTS-fetchToken');
+  const REGION = process.env.AZURE_SPEECH_REGION;
+  const AZURE_TOKEN_ENDPOINT = `https://${REGION}.api.cognitive.microsoft.com/sts/v1.0/issuetoken`;
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 秒超時
+
+  try {
+    const tokenResponse = await fetch(AZURE_TOKEN_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY!,
+        'Content-Length': '0',
+      },
+      body: '',
+      signal: controller.signal
+    });
+    
+    if (!tokenResponse.ok) {
+      throw new Error(
+        `Failed to get access token from Azure TTS: ${tokenResponse.status} ${tokenResponse.statusText}`
+      );
+    }
+    
+    const accessToken = await tokenResponse.text();
+    
+    // 設定 Token 與過期時間（9 分鐘，留 1 分鐘緩衝）
+    cachedToken = accessToken;
+    tokenExpiration = new Date(Date.now() + 9 * 60 * 1000);
+    console.log('💾 Fetched and cached new Azure TTS token');
+    
+    return accessToken;
+  } finally {
+    clearTimeout(timeoutId)
+    console.timeEnd('azureTTS-fetchToken');
+  }
+}
+
+// 3. 提供專門的函式來抓取 Token：有效期內直接用舊 Token，防止併發重複請求
 async function fetchAzureToken(): Promise<string> {
-  // （1）檢查是否有已快取且未過期的 Token
+  // 檢查是否有已快取且未過期的 Token
   if (cachedToken && tokenExpiration && tokenExpiration > new Date()) {
     console.log('🚀 Using cached Azure TTS token');
     return cachedToken;
   }
 
-  console.time('azureTTS-fetchToken');
-  const REGION = process.env.AZURE_SPEECH_REGION;
-  const AZURE_TOKEN_ENDPOINT = `https://${REGION}.api.cognitive.microsoft.com/sts/v1.0/issuetoken`;
-
-  // （2）呼叫 Azure 以取得新的 Token
-  const tokenResponse = await fetch(AZURE_TOKEN_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Ocp-Apim-Subscription-Key': process.env.AZURE_SPEECH_KEY!,
-    },
-  });
-  console.timeEnd('azureTTS-fetchToken');
-
-  if (!tokenResponse.ok) {
-    throw new Error(
-      `Failed to get access token from Azure TTS: ${tokenResponse.status} ${tokenResponse.statusText}`
-    );
+  // 防止併發重複請求
+  if (tokenPromise) {
+    console.log('⏳ Waiting for concurrent token fetch');
+    return await tokenPromise;
   }
-  const accessToken = await tokenResponse.text();
 
-  // （3）設定 Token 與過期時間（例如 10 分鐘）
-  cachedToken = accessToken;
-  tokenExpiration = new Date(Date.now() + 10 * 60 * 1000);
-  console.log('💾 Fetched and cached new Azure TTS token');
-
-  return accessToken;
+  tokenPromise = performTokenFetch();
+  try {
+    const token = await tokenPromise;
+    return token;
+  } finally {
+    tokenPromise = null;
+  }
 }
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const startTime = Date.now()
+  console.log('🎤 TTS API 請求開始:', req.url)
+  
   if (req.method !== 'GET') {
     res.status(405).end();
     return;
@@ -227,7 +194,7 @@ export default async function handler(
 
   try {
     const hashId = generateHashId(text);
-    console.log('hashId', hashId);
+    console.log('📝 處理文字:', text, '| Hash:', hashId);
 
     // 檢查 If-None-Match 標頭
     const ifNoneMatch = req.headers['if-none-match'];
@@ -239,12 +206,13 @@ export default async function handler(
       return;
     }
 
-    // 檢查快取
+    // 檢查快取 (使用新的 R2 整合介面)
     console.time(`getCachedAudio-${hashId}`);
     const { buffer: cachedAudio, source: cacheSource } = await getCachedAudio(hashId);
     console.timeEnd(`getCachedAudio-${hashId}`);
 
     if (cachedAudio) {
+      console.log(`✅ 快取命中 (${cacheSource}):`, cachedAudio.length, 'bytes');
       logCacheStatus(req, hashId, cacheSource);
       res.setHeader('Content-Type', 'audio/mpeg');
       res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
@@ -257,11 +225,12 @@ export default async function handler(
       res.setHeader('CF-Cache-Status', 'DYNAMIC');
       res.setHeader('X-Content-Type-Options', 'nosniff');
 
+      console.log(`⚡ 快取回應時間: ${Date.now() - startTime}ms`);
       res.send(cachedAudio);
       return;
     }
 
-    console.log('🎙️ Fetching from Azure TTS');
+    console.log('🎙️ 快取未命中，呼叫 Azure TTS');
 
     // 3. 每次要呼叫 Azure TTS 前，先拿 token，已存在且未過期就不會重撈
     const accessToken = await fetchAzureToken();
@@ -271,25 +240,36 @@ export default async function handler(
     const AZURE_COGNITIVE_ENDPOINT = `https://${REGION}.tts.speech.microsoft.com/cognitiveservices/v1`;
 
     console.time(`azureTTS-synthesize-${hashId}`);
-    const ttsResponse = await fetch(AZURE_COGNITIVE_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/ssml+xml',
-        'X-Microsoft-OutputFormat': 'audio-16khz-32kbitrate-mono-mp3',
-        'User-Agent': 'YourAppName',
-      },
-      body: `<speak version='1.0' 
-                    xmlns='http://www.w3.org/2001/10/synthesis' 
-                    xml:lang='ja-JP'>
-               <voice name='ja-JP-NanamiNeural'>
-                 <prosody volume='+100%'>
-                   ${text}
-                 </prosody>
-               </voice>
-             </speak>`,
-    });
-    console.timeEnd(`azureTTS-synthesize-${hashId}`);
+    
+    // 添加 TTS 請求超時控制
+    const ttsController = new AbortController()
+    const ttsTimeoutId = setTimeout(() => ttsController.abort(), 30000) // 30 秒超時
+
+    let ttsResponse: Response;
+    try {
+      ttsResponse = await fetch(AZURE_COGNITIVE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/ssml+xml',
+          'X-Microsoft-OutputFormat': 'audio-16khz-32kbitrate-mono-mp3',
+          'User-Agent': 'Stamina-en-Menu-App',
+        },
+        body: `<speak version='1.0' 
+                      xmlns='http://www.w3.org/2001/10/synthesis' 
+                      xml:lang='ja-JP'>
+                 <voice name='ja-JP-NanamiNeural'>
+                   <prosody volume='+100%'>
+                     ${text}
+                   </prosody>
+                 </voice>
+               </speak>`,
+        signal: ttsController.signal
+      });
+    } finally {
+      clearTimeout(ttsTimeoutId)
+      console.timeEnd(`azureTTS-synthesize-${hashId}`);
+    }
 
     if (!ttsResponse.ok) {
       throw new Error(`TTS API request failed: ${ttsResponse.status} ${ttsResponse.statusText}`);
@@ -297,11 +277,18 @@ export default async function handler(
 
     const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
 
-    // 儲存快取
+    // 儲存快取 (使用新的 R2 整合介面)
     console.time(`setCachedAudio-${hashId}`);
-    await setCachedAudio(hashId, audioBuffer);
+    await setCachedAudio(hashId, audioBuffer, {
+      text: text,
+      generated: new Date().toISOString(),
+      source: 'tts-api'
+    });
     console.timeEnd(`setCachedAudio-${hashId}`);
 
+    console.log(`🎵 Azure TTS 生成完成:`, audioBuffer.length, 'bytes');
+    console.log(`🕐 總處理時間: ${Date.now() - startTime}ms`);
+    
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
     res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400');
