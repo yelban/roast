@@ -288,10 +288,24 @@ export default function Menu() {
           const r2Controller = new AbortController()
           const r2TimeoutId = setTimeout(() => r2Controller.abort(), 15000) // 15 秒超時
           
+          // 先嘗試簡單的 HEAD 請求檢查檔案存在
+          const headResponse = await fetch(r2AudioUrl, {
+            method: 'HEAD',
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'omit',
+            signal: r2Controller.signal
+          })
+          
+          if (!headResponse.ok) {
+            throw new Error(`HEAD request failed: ${headResponse.status}`)
+          }
+          
+          // HEAD 成功後再發送 GET 請求
           const r2Response = await fetch(r2AudioUrl, {
             method: 'GET',
             mode: 'cors',
-            cache: 'force-cache',
+            cache: 'no-cache', // 避免快取 CORS 失敗結果
             credentials: 'omit',
             signal: r2Controller.signal
           })
