@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS R2 Debug Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f0f0f0; }
+        .test-section { background: white; margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 TTS R2 Direct Access Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>Environment Information</h2>
+        <div id="env-info"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Hash Generation Test</h2>
+        <button onclick="testHashGeneration()">Test Hash Generation</button>
+        <div id="hash-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>R2 Direct Access Test</h2>
+        <button onclick="testR2DirectAccess('上ロース')">Test "上ロース"</button>
+        <button onclick="testR2DirectAccess('ロース')">Test "ロース"</button>
+        <button onclick="testR2DirectAccess('上')">Test "上"</button>
+        <div id="r2-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Audio Playback Test</h2>
+        <button onclick="testAudioPlayback('上ロース')">Test Audio Playback "上ロース"</button>
+        <div id="audio-results"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        // Environment info
+        document.getElementById('env-info').innerHTML = `
+            <pre>
+Location: ${window.location.href}
+User Agent: ${navigator.userAgent}
+NODE_ENV: ${typeof process !== 'undefined' ? process.env.NODE_ENV : 'undefined (browser)'}
+NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL: ${typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL : 'Not available in browser'}
+            </pre>
+        `;
+
+        // Hash generation function (same as utils.ts)
+        function generateHash(text) {
+            return CryptoJS.SHA256(text).toString();
+        }
+
+        function testHashGeneration() {
+            const testTexts = ['上ロース', 'ロース', '上', 'ベーコン'];
+            let output = '<h3>Hash Generation Results:</h3>';
+            
+            testTexts.forEach(text => {
+                const hash = generateHash(text);
+                output += `
+                    <div class="result info">
+                        <strong>Text:</strong> "${text}"<br>
+                        <strong>Hash:</strong> ${hash}<br>
+                        <strong>R2 URL:</strong> https://tts-cache.36.to/${hash}.mp3
+                    </div>
+                `;
+            });
+            
+            document.getElementById('hash-results').innerHTML = output;
+        }
+
+        async function testR2DirectAccess(text) {
+            const hash = generateHash(text);
+            const r2PublicUrl = 'https://tts-cache.36.to';
+            const r2AudioUrl = `${r2PublicUrl}/${hash}.mp3`;
+            
+            const resultDiv = document.getElementById('r2-results');
+            resultDiv.innerHTML += `<div class="result info">Testing "${text}"...</div>`;
+            
+            try {
+                console.log(`🔍 Testing R2 access for: "${text}"`);
+                console.log(`🔗 URL: ${r2AudioUrl}`);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
+                const response = await fetch(r2AudioUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'force-cache',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                console.log(`📊 Response: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const contentLength = response.headers.get('content-length');
+                    console.log(`📦 Content-Length: ${contentLength}`);
+                    
+                    const blob = await response.blob();
+                    console.log(`📄 Blob size: ${blob.size}, type: ${blob.type}`);
+                    
+                    resultDiv.innerHTML += `
+                        <div class="result success">
+                            <strong>✅ SUCCESS: "${text}"</strong><br>
+                            Status: ${response.status} ${response.statusText}<br>
+                            Content-Length: ${contentLength}<br>
+                            Blob size: ${blob.size} bytes<br>
+                            Blob type: ${blob.type}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML += `
+                        <div class="result error">
+                            <strong>❌ FAILED: "${text}"</strong><br>
+                            Status: ${response.status} ${response.statusText}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error(`❌ Error testing "${text}":`, error);
+                resultDiv.innerHTML += `
+                    <div class="result error">
+                        <strong>❌ ERROR: "${text}"</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testAudioPlayback(text) {
+            const hash = generateHash(text);
+            const r2PublicUrl = 'https://tts-cache.36.to';
+            const r2AudioUrl = `${r2PublicUrl}/${hash}.mp3`;
+            
+            const resultDiv = document.getElementById('audio-results');
+            resultDiv.innerHTML += `<div class="result info">Testing audio playback for "${text}"...</div>`;
+            
+            try {
+                const response = await fetch(r2AudioUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const audio = new Audio();
+                audio.preload = 'auto';
+                audio.src = blobUrl;
+                
+                let eventLog = [];
+                
+                audio.onloadstart = () => {
+                    eventLog.push('loadstart');
+                    console.log('🎵 Audio loadstart');
+                };
+                
+                audio.oncanplay = () => {
+                    eventLog.push('canplay');
+                    console.log('🎵 Audio canplay');
+                };
+                
+                audio.oncanplaythrough = () => {
+                    eventLog.push('canplaythrough');
+                    console.log('🎵 Audio canplaythrough');
+                };
+                
+                audio.onplay = () => {
+                    eventLog.push('play');
+                    console.log('🎵 Audio play');
+                };
+                
+                audio.onended = () => {
+                    eventLog.push('ended');
+                    console.log('🎵 Audio ended');
+                    URL.revokeObjectURL(blobUrl);
+                    
+                    resultDiv.innerHTML += `
+                        <div class="result success">
+                            <strong>🎵 AUDIO PLAYBACK SUCCESS: "${text}"</strong><br>
+                            Events: ${eventLog.join(' → ')}<br>
+                            Duration: ${audio.duration}s
+                        </div>
+                    `;
+                };
+                
+                audio.onerror = (e) => {
+                    eventLog.push('error');
+                    console.error('🎵 Audio error:', e);
+                    URL.revokeObjectURL(blobUrl);
+                    
+                    resultDiv.innerHTML += `
+                        <div class="result error">
+                            <strong>❌ AUDIO PLAYBACK FAILED: "${text}"</strong><br>
+                            Events: ${eventLog.join(' → ')}<br>
+                            Error code: ${e.target?.error?.code}<br>
+                            Error message: ${e.target?.error?.message}
+                        </div>
+                    `;
+                };
+                
+                // Load and attempt to play
+                audio.load();
+                
+                // Wait for canplaythrough and then play
+                await new Promise((resolve, reject) => {
+                    audio.oncanplaythrough = async () => {
+                        try {
+                            await audio.play();
+                            setTimeout(resolve, 1000); // Let it play for 1 second
+                        } catch (playError) {
+                            reject(playError);
+                        }
+                    };
+                    
+                    audio.onerror = () => {
+                        reject(new Error('Audio load failed'));
+                    };
+                });
+                
+            } catch (error) {
+                console.error(`❌ Audio test error for "${text}":`, error);
+                resultDiv.innerHTML += `
+                    <div class="result error">
+                        <strong>❌ AUDIO TEST ERROR: "${text}"</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

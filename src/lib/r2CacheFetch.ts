@@ -264,9 +264,14 @@ export async function checkCacheAvailability(hashId: string): Promise<CacheAvail
       const key = generateCacheKey(hashId)
       const publicUrl = `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${key}`
       
+      console.log(`🔍 Checking R2 cache availability: ${publicUrl}`)
+      
       // R2 不支援 HEAD 請求，改用 GET 請求但只讀取少量數據
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000)
+      const timeoutId = setTimeout(() => {
+        console.log(`⏰ R2 cache check timeout for ${hashId}`)
+        controller.abort()
+      }, 3000)
       
       try {
         const response = await fetch(publicUrl, { 
@@ -277,16 +282,32 @@ export async function checkCacheAvailability(hashId: string): Promise<CacheAvail
           }
         })
         
+        console.log(`📊 R2 cache check response: ${response.status} ${response.statusText}`)
+        
         if (response.ok || response.status === 206) { // 206 = Partial Content
           console.log('🔥 R2 Cache available (redirect):', hashId)
           return { source: 'r2', publicUrl }
+        } else {
+          console.log(`❌ R2 cache not available: ${response.status} ${response.statusText}`)
         }
       } finally {
         clearTimeout(timeoutId)
       }
     } catch (error) {
       console.warn('R2 public URL check failed:', error)
+      // 添加更詳細的錯誤日誌
+      if (error instanceof Error) {
+        console.warn('Error details:', {
+          name: error.name,
+          message: error.message,
+          cause: error.cause
+        })
+      }
     }
+  } else {
+    console.log('🔧 R2 not configured or public URL missing')
+    if (!r2) console.log('   - R2 instance not available')
+    if (!process.env.CLOUDFLARE_R2_PUBLIC_URL) console.log('   - CLOUDFLARE_R2_PUBLIC_URL not set')
   }
 
   // 簡化架構：移除 Vercel Blob 檢查
