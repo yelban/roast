@@ -12,7 +12,7 @@
 - 🌍 **多語言支援** - 日文、繁體中文、簡體中文、英文
 - 🔊 **智能 TTS 語音** - 日文菜單項目語音播放，支援多層級快取
 - 📱 **響應式設計** - 完美適配手機、平板、桌面端
-- ⚡ **極速載入** - 多層級快取策略，99% 快取命中率
+- ⚡ **極速載入** - 3層快取策略，99% 快取命中率
 - 🎨 **字體優化** - 字體子集化，減少 70% 載入時間
 - 🔄 **離線支援** - PWA 技術，支援離線瀏覽
 - 🚀 **高效能** - Core Web Vitals 優化，Lighthouse 95+ 分
@@ -32,12 +32,11 @@ Backend & Services:
 ├── Next.js API Routes
 ├── Azure Text-to-Speech API
 ├── Cloudflare R2 (主要快取)
-├── Vercel Blob (備用快取)
-└── Vercel KV (邊緣快取)
+└── Vercel Blob (備用快取)
 
 PWA & Caching:
 ├── Service Worker (Workbox)
-├── 4層快取策略
+├── 3層快取策略
 ├── 背景同步
 └── 離線支援
 ```
@@ -45,22 +44,14 @@ PWA & Caching:
 ### 快取架構
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Browser Cache │────│   Edge Cache    │────│  Cloudflare R2  │
-│   (Service SW)  │    │   (Vercel KV)   │    │   (CDN Cache)   │
+│   Browser Cache │────│  Cloudflare R2  │────│  Vercel Blob    │
+│   (Service SW)  │    │   (主要快取)     │    │   (備用快取)     │
 │                 │    │                 │    │                 │
-│ • 離線快取       │    │ • 邊緣快取       │    │ • 全球 CDN      │
-│ • 即時存取       │    │ • 超低延遲       │    │ • 大容量存儲     │
-│ • 90天 TTL      │    │ • 智能失效       │    │ • 1年 TTL       │
+│ • 離線快取       │    │ • 全球 CDN      │    │ • 災難恢復       │
+│ • 即時存取       │    │ • 大容量存儲     │    │ • 資料備份       │
+│ • 90天 TTL      │    │ • 1年 TTL       │    │ • 自動同步       │
+│ • 背景同步       │    │ • 超低延遲       │    │ • 回退機制       │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
-                                ↓
-                    ┌─────────────────┐
-                    │  Vercel Blob    │
-                    │  (備用快取)      │
-                    │                 │
-                    │ • 災難恢復       │
-                    │ • 資料備份       │
-                    │ • 自動同步       │
-                    └─────────────────┘
 ```
 
 ## 🚀 開始使用
@@ -95,6 +86,8 @@ CLOUDFLARE_R2_ACCESS_KEY_ID=your_r2_access_key
 CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_r2_secret_key
 CLOUDFLARE_R2_BUCKET_NAME=your_bucket_name
 CLOUDFLARE_R2_PUBLIC_URL=https://your-domain.com
+BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+CACHE_MODE=blob
 ```
 
 4. **生成字體子集**
@@ -221,8 +214,9 @@ GET /api/tts/health     # TTS 服務健康檢查
 - **TTS 響應時間**: < 3s (95% 情況)
 
 ### 快取策略
-- **邊緣快取**: 立即響應 (< 100ms)
-- **CDN 快取**: 全球分發 (< 500ms)
+- **瀏覽器快取**: 立即響應 (< 50ms)
+- **Cloudflare R2**: 全球 CDN 分發 (< 200ms)
+- **Vercel Blob**: 備用快取 (< 500ms)
 - **預熱機制**: 80+ 常用項目預生成
 - **智能快取**: 基於使用頻率自動優化
 
