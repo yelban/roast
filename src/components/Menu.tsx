@@ -17,7 +17,7 @@ import { Volume2 } from 'lucide-react'
 import { FontWrapper } from '@/components/FontWrapper'
 import { generateHash } from '@/lib/utils'
 import { recordCacheUsage } from '@/lib/cacheMetrics'
-import { playStreamingAudio, StreamingAudioPlayer } from '@/lib/audioStreaming'
+import { StreamingAudioPlayer } from '@/lib/audioStreaming'
 
 interface SelectedItem extends MenuItem {
   categoryName: {
@@ -136,13 +136,39 @@ export default function Menu() {
     }, 300)
   }
 
-  const formatPrice = (price: number | { normal?: number; half?: number } | string): string => {
-    if (typeof price === 'number') return `¥${price.toLocaleString()}`
-    if (typeof price === 'string') return `¥${price}`
-    if (price.normal) {
-      return `¥${price.normal.toLocaleString()}${price.half ? ` / ¥${price.half.toLocaleString()}` : ''}`
+  const formatPrice = (price: number | { normal?: number; half?: number } | string): JSX.Element => {
+    if (typeof price === 'number') {
+      return (
+        <span>
+          <span className="text-gray-400 mr-0.5 font-light align-bottom">¥</span>
+          {price.toLocaleString()}
+        </span>
+      )
     }
-    return '價格未定'
+    if (typeof price === 'string') {
+      return (
+        <span>
+          <span className="text-gray-400 mr-0.5 font-light align-bottom">¥</span>
+          {price}
+        </span>
+      )
+    }
+    if (price.normal) {
+      return (
+        <span>
+          <span className="text-gray-400 mr-0.5 font-light align-bottom">¥</span>
+          {price.normal.toLocaleString()}
+          {price.half ? (
+            <>
+              {' / '}
+              <span className="text-gray-400 mr-0.5 font-light align-bottom">¥</span>
+              {price.half.toLocaleString()}
+            </>
+          ) : ''}
+        </span>
+      )
+    }
+    return <span>價格未定</span>
   }
 
   const playTTS = async (text: string) => {
@@ -311,9 +337,9 @@ export default function Menu() {
                       className="flex justify-between border-b pb-2 p-0 cursor-pointer hover:bg-gray-50 rounded"
                       onClick={() => handleItemClick(item, categoryData.name)}
                     >
-                      <span className="text-xl">{item?.name?.[lang] || '未知項目'}</span>
+                      <span className="text-2xl">{item?.name?.[lang] || '未知項目'}</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">
+                        <span className="font-semibold text-xl">
                           {formatPrice(item.price)}
                         </span>
                         <span className="flex items-center text-gray-300">❯</span>
