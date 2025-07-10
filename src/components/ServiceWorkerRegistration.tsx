@@ -8,8 +8,7 @@ export function ServiceWorkerRegistration() {
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
-      'serviceWorker' in navigator &&
-      process.env.NODE_ENV === 'production'
+      'serviceWorker' in navigator
     ) {
       const wb = new Workbox(`/sw.js?v=${SW_VERSION}`)
 
