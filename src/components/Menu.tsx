@@ -292,6 +292,11 @@ export default function Menu() {
             method: 'GET',
             mode: 'cors',
             cache: 'force-cache',
+            credentials: 'omit',
+            headers: {
+              'Accept': 'audio/mpeg, audio/*',
+              'Origin': window.location.origin
+            },
             signal: r2Controller.signal
           })
           

@@ -6,6 +6,12 @@ const CHECK_INTERVAL = 24 * 60 * 60 * 1000  // 24小時
 
 export function ServiceWorkerRegistration() {
   useEffect(() => {
+    // 在本地開發環境中禁用 PWA
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 Development mode: PWA disabled')
+      return
+    }
+
     if (
       typeof window !== 'undefined' &&
       'serviceWorker' in navigator

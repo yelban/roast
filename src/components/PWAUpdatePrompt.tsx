@@ -5,6 +5,11 @@ export function PWAUpdatePrompt() {
   const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
 
   useEffect(() => {
+    // 在本地開發環境中禁用 PWA 更新提示
+    if (process.env.NODE_ENV === 'development') {
+      return
+    }
+
     if ('serviceWorker' in navigator) {
       // 定期檢查更新（每小時）
       const interval = setInterval(() => {
