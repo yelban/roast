@@ -286,7 +286,7 @@ export default function Menu() {
           // console.log('🔥 嘗試直接從 R2 獲取:', r2AudioUrl)
           
           const r2Controller = new AbortController()
-          const r2TimeoutId = setTimeout(() => r2Controller.abort(), 10000) // 10 秒超時
+          const r2TimeoutId = setTimeout(() => r2Controller.abort(), 15000) // 15 秒超時
           
           const r2Response = await fetch(r2AudioUrl, {
             method: 'GET',
@@ -336,7 +336,12 @@ export default function Menu() {
             // console.log('❌ R2 回應失敗:', r2Response.status, r2Response.statusText)
           }
         } catch (error) {
-          // console.log('🔄 R2 直接獲取失敗，回退到 API:', error)
+          console.log('🔄 R2 直接獲取失敗，回退到 API:', error)
+          console.log('錯誤類型:', error instanceof Error ? error.name : typeof error)
+          console.log('錯誤訊息:', error instanceof Error ? error.message : String(error))
+          if (error instanceof Error && error.name === 'AbortError') {
+            console.log('R2 請求被超時中止 (10秒)')
+          }
         }
       }
 
