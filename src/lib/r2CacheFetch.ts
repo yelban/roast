@@ -264,17 +264,20 @@ export async function checkCacheAvailability(hashId: string): Promise<CacheAvail
       const key = generateCacheKey(hashId)
       const publicUrl = `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${key}`
       
-      // 使用 HEAD 請求快速檢查檔案存在，增加短超時以避免長時間等待
+      // R2 不支援 HEAD 請求，改用 GET 請求但只讀取少量數據
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 3000)
       
       try {
         const response = await fetch(publicUrl, { 
-          method: 'HEAD',
-          signal: controller.signal
+          method: 'GET',
+          signal: controller.signal,
+          headers: {
+            'Range': 'bytes=0-0' // 只請求第一個位元組來檢查存在性
+          }
         })
         
-        if (response.ok) {
+        if (response.ok || response.status === 206) { // 206 = Partial Content
           console.log('🔥 R2 Cache available (redirect):', hashId)
           return { source: 'r2', publicUrl }
         }
@@ -294,11 +297,14 @@ export async function checkCacheAvailability(hashId: string): Promise<CacheAvail
     
     try {
       const response = await fetch(blobUrl, { 
-        method: 'HEAD',
-        signal: controller.signal
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Range': 'bytes=0-0' // 只請求第一個位元組來檢查存在性
+        }
       })
       
-      if (response.ok) {
+      if (response.ok || response.status === 206) { // 206 = Partial Content
         console.log('☁️ Blob Cache available (redirect):', hashId)
         return { source: 'blob', publicUrl: blobUrl }
       }
