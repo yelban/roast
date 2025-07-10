@@ -289,32 +289,9 @@ export async function checkCacheAvailability(hashId: string): Promise<CacheAvail
     }
   }
 
-  // 2. 檢查 Vercel Blob 是否可用
-  try {
-    const blobUrl = `${process.env.BLOB_STORE_URL}/tts-cache/${hashId}.mp3`
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000)
-    
-    try {
-      const response = await fetch(blobUrl, { 
-        method: 'GET',
-        signal: controller.signal,
-        headers: {
-          'Range': 'bytes=0-0' // 只請求第一個位元組來檢查存在性
-        }
-      })
-      
-      if (response.ok || response.status === 206) { // 206 = Partial Content
-        console.log('☁️ Blob Cache available (redirect):', hashId)
-        return { source: 'blob', publicUrl: blobUrl }
-      }
-    } finally {
-      clearTimeout(timeoutId)
-    }
-  } catch (error) {
-    console.warn('Blob cache check failed:', error)
-  }
-
+  // 簡化架構：移除 Vercel Blob 檢查
+  // 新架構專注於 R2 直接存取 + API 回退
+  
   return { source: 'miss' }
 }
 
@@ -357,9 +334,7 @@ export async function getCachedAudio(hashId: string): Promise<CacheResult> {
 }
 
 export async function setCachedAudio(hashId: string, audioBuffer: Buffer, metadata?: Record<string, string>): Promise<void> {
-  const promises: Promise<boolean | void>[] = []
-
-  // 1. 儲存到 R2 (優先)
+  // 新架構：只儲存到 R2，簡化快取策略
   const r2 = getR2Cache()
   if (r2) {
     const key = generateCacheKey(hashId)
@@ -370,31 +345,20 @@ export async function setCachedAudio(hashId: string, audioBuffer: Buffer, metada
       size: audioBuffer.length.toString()
     }
     
-    promises.push(
-      r2.put(key, audioBuffer, cacheMetadata)
-        .then(success => {
-          if (success) {
-            console.log('🔥 Saved to R2 Cache:', hashId)
-          } else {
-            console.warn('R2 save failed:', hashId)
-          }
-        })
-        .catch(error => console.warn('R2 save error:', error))
-    )
+    try {
+      const success = await r2.put(key, audioBuffer, cacheMetadata)
+      if (success) {
+        console.log('🔥 Saved to R2 Cache:', hashId)
+      } else {
+        console.warn('⚠️ R2 save failed:', hashId)
+      }
+    } catch (error) {
+      console.error('❌ R2 save error:', error)
+    }
+  } else {
+    console.warn('⚠️ R2 not available, audio not cached')
   }
 
-  // 2. 儲存到 Vercel Blob (回退)
-  const { put } = await import('@vercel/blob')
-  promises.push(
-    put(`tts-cache/${hashId}.mp3`, audioBuffer, {
-      access: 'public',
-      addRandomSuffix: false,
-      contentType: 'audio/mpeg'
-    })
-      .then(() => console.log('☁️ Saved to Blob Storage:', hashId))
-      .catch(error => console.warn('Blob save error:', error))
-  )
-
-  // 並行執行，不等待完成
-  Promise.allSettled(promises)
+  // TODO: Vercel Blob 快取已移除以簡化架構
+  // 如需雙重備份，可考慮其他解決方案
 }

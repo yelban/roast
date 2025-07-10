@@ -212,19 +212,7 @@ export default async function handler(
     const cacheAvailability = await checkCacheAvailability(hashId);
     console.timeEnd(`checkCacheAvailability-${hashId}`);
 
-    // 如果快取可用且有公開 URL，直接重導向
-    if (cacheAvailability.source !== 'miss' && cacheAvailability.publicUrl) {
-      console.log(`🚀 快取重導向 (${cacheAvailability.source}):`, cacheAvailability.publicUrl);
-      logCacheStatus(req, hashId, cacheAvailability.source);
-      
-      // 設定重導向 headers
-      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300'); // 重導向本身可以快取 5 分鐘
-      res.setHeader('Location', cacheAvailability.publicUrl);
-      
-      console.log(`⚡ 重導向回應時間: ${Date.now() - startTime}ms`);
-      res.status(302).end();
-      return;
-    }
+    // 注意：客戶端現在會優先直接請求 R2，這裡主要處理回退情況
 
     // 如果快速檢查失敗，回退到傳統快取檢查（確保向後相容）
     console.time(`getCachedAudio-${hashId}`);

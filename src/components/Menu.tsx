@@ -261,21 +261,49 @@ export default function Menu() {
         })
       }
 
-      // 添加客戶端超時控制
+      // 先嘗試直接從 R2 獲取（如果有配置 R2 公開 URL）
+      const r2PublicUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL
+      if (r2PublicUrl) {
+        try {
+          const r2AudioUrl = `${r2PublicUrl}/${textHash}.mp3`
+          console.log('🔥 嘗試直接從 R2 獲取:', r2AudioUrl)
+          
+          const r2Controller = new AbortController()
+          const r2TimeoutId = setTimeout(() => r2Controller.abort(), 10000) // 10 秒超時
+          
+          const r2Response = await fetch(r2AudioUrl, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'force-cache',
+            signal: r2Controller.signal
+          })
+          
+          clearTimeout(r2TimeoutId)
+          
+          if (r2Response.ok) {
+            console.log('✅ R2 直接命中!')
+            return await playAudio(r2Response)
+          }
+        } catch (error) {
+          console.log('🔄 R2 直接獲取失敗，回退到 API:', error)
+        }
+      }
+
+      // 回退到 API 方式
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 35000) // 35 秒超時
       
       try {
-        // 配置請求選項，包含重導向處理
+        // 配置請求選項
         const fetchOptions = {
           headers: {
-            'Accept': 'audio/mpeg',
-            'If-None-Match': `"${textHash}"`,
+            'Accept': 'audio/mpeg'
+            // 移除可能觸發預檢的標頭
           },
-          cache: 'force-cache' as RequestCache, // 強制使用快取
+          cache: 'force-cache' as RequestCache,
           signal: controller.signal,
-          redirect: 'follow' as RequestRedirect, // 自動跟隨重導向
-          mode: 'cors' as RequestMode // 允許跨域請求
+          redirect: 'follow' as RequestRedirect,
+          mode: 'cors' as RequestMode
         }
 
         const response = await fetch(apiUrl, fetchOptions)
