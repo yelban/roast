@@ -288,20 +288,6 @@ export default function Menu() {
           const r2Controller = new AbortController()
           const r2TimeoutId = setTimeout(() => r2Controller.abort(), 15000) // 15 秒超時
           
-          // 先嘗試簡單的 HEAD 請求檢查檔案存在
-          const headResponse = await fetch(r2AudioUrl, {
-            method: 'HEAD',
-            mode: 'cors',
-            cache: 'no-cache',
-            credentials: 'omit',
-            signal: r2Controller.signal
-          })
-          
-          if (!headResponse.ok) {
-            throw new Error(`HEAD request failed: ${headResponse.status}`)
-          }
-          
-          // HEAD 成功後再發送 GET 請求
           const r2Response = await fetch(r2AudioUrl, {
             method: 'GET',
             mode: 'cors',
@@ -317,7 +303,7 @@ export default function Menu() {
             
             // 檢查回應內容
             const contentLength = r2Response.headers.get('content-length')
-            // console.log('📦 R2 內容長度:', contentLength)
+            console.log('📦 R2 內容長度:', contentLength)
             
             try {
               // 檢查是否能正確讀取內容
