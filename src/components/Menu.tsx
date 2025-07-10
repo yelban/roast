@@ -50,7 +50,7 @@ export default function Menu() {
       const data = await response.json()
       setMenuData(data)
     } catch (error) {
-      console.error('載入菜單失敗:', error)
+      // console.error('載入菜單失敗:', error)
     } finally {
       setIsMenuLoading(false)
     }
@@ -208,11 +208,13 @@ export default function Menu() {
         const responseTime = performance.now() - startTime
         recordCacheUsage(textHash, text, responseTime)
         
-        console.log('開始播放音訊:', text)
+        // console.log('🎵 開始播放音訊:', text)
+        // console.log('🎵 AudioResponse 狀態:', audioResponse.status, audioResponse.statusText)
         
         // 簡化為傳統播放方式，避免流式播放的複雜性
+        // console.log('🎵 讀取 audioResponse blob...')
         const blob = await audioResponse.blob()
-        console.log('音訊 Blob 大小:', blob.size, 'bytes')
+        // console.log('🎵 音訊 Blob 大小:', blob.size, 'bytes, 類型:', blob.type)
         
         const blobUrl = URL.createObjectURL(blob)
         const audio = new Audio()
@@ -220,20 +222,27 @@ export default function Menu() {
         audio.src = blobUrl
         
         // 設定事件監聽器
-        audio.onloadstart = () => console.log('音訊開始載入')
-        audio.oncanplay = () => console.log('音訊可以播放')
+        // audio.onloadstart = () => console.log('🎵 音訊開始載入')
+        // audio.oncanplay = () => console.log('🎵 音訊可以播放')
         audio.onplay = () => {
-          console.log('音訊開始播放')
+          // console.log('🎵 音訊開始播放')
           setIsPlaying(true)
         }
         audio.onended = () => {
-          console.log('音訊播放結束')
+          // console.log('🎵 音訊播放結束')
           setIsPlaying(false)
           setAudioProgress(null)
           URL.revokeObjectURL(blobUrl)
         }
-        audio.onerror = (e) => {
-          console.error('音訊播放錯誤:', e)
+        audio.onerror = () => {
+          // console.error('🎵 音訊播放錯誤:', e)
+          // console.error('🎵 Audio element error details:', {
+          //   code: e.target?.error?.code,
+          //   message: e.target?.error?.message,
+          //   networkState: e.target?.networkState,
+          //   readyState: e.target?.readyState,
+          //   src: e.target?.src
+          // })
           setIsPlaying(false)
           setAudioProgress(null)
           URL.revokeObjectURL(blobUrl)
@@ -243,30 +252,38 @@ export default function Menu() {
         return new Promise((resolve, reject) => {
           audio.oncanplaythrough = async () => {
             try {
-              console.log('音訊完全載入，開始播放')
+              // console.log('🎵 音訊完全載入，開始播放')
               await audio.play()
+              // console.log('🎵 播放命令執行成功')
               resolve(audio)
             } catch (playError) {
-              console.error('播放錯誤:', playError)
+              // console.error('🎵 播放錯誤:', playError)
               reject(playError)
             }
           }
           
           audio.onerror = () => {
+            // console.error('🎵 音訊載入失敗在 Promise 內')
             reject(new Error('音訊載入失敗'))
           }
           
           // 開始載入音訊
+          // console.log('🎵 開始載入音訊檔案...')
           audio.load()
         })
       }
 
       // 先嘗試直接從 R2 獲取（如果有配置 R2 公開 URL）
       const r2PublicUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL
+      // console.log('🔍 R2 Public URL:', r2PublicUrl)
+      // console.log('📝 Current text:', text)
+      // console.log('📝 Text hash:', textHash)
+      // console.log('🌍 Current NODE_ENV:', process.env.NODE_ENV)
+      // console.log('🌍 Current location:', window.location.href)
       if (r2PublicUrl) {
         try {
           const r2AudioUrl = `${r2PublicUrl}/${textHash}.mp3`
-          console.log('🔥 嘗試直接從 R2 獲取:', r2AudioUrl)
+          // console.log('🔥 嘗試直接從 R2 獲取:', r2AudioUrl)
           
           const r2Controller = new AbortController()
           const r2TimeoutId = setTimeout(() => r2Controller.abort(), 10000) // 10 秒超時
@@ -281,15 +298,49 @@ export default function Menu() {
           clearTimeout(r2TimeoutId)
           
           if (r2Response.ok) {
-            console.log('✅ R2 直接命中!')
-            return await playAudio(r2Response)
+            // console.log('✅ R2 直接命中! 狀態:', r2Response.status)
+            
+            // 檢查回應內容
+            const contentLength = r2Response.headers.get('content-length')
+            // console.log('📦 R2 內容長度:', contentLength)
+            
+            try {
+              // 檢查是否能正確讀取內容
+              // console.log('📄 開始讀取 R2 blob...')
+              const blob = await r2Response.blob()
+              // console.log('📄 實際 Blob 大小:', blob.size, '類型:', blob.type)
+              
+              if (blob.size === 0) {
+                throw new Error('R2 回應內容為空')
+              }
+              
+              // 重新創建 Response 對象給 playAudio 使用
+              // console.log('🔧 創建 Response 對象...')
+              const audioResponse = new Response(blob, {
+                status: r2Response.status,
+                statusText: r2Response.statusText,
+                headers: r2Response.headers
+              })
+              
+              // console.log('🎵 開始播放 R2 音訊...')
+              await playAudio(audioResponse)
+              // console.log('🎵 R2 音訊播放成功，結束函數')
+              return // 成功播放，結束函數
+            } catch (playError) {
+              // console.warn('🚨 R2 音訊播放失敗，回退到 API:', playError)
+              // console.error('🚨 完整錯誤堆疊:', playError)
+              // 繼續執行回退邏輯
+            }
+          } else {
+            // console.log('❌ R2 回應失敗:', r2Response.status, r2Response.statusText)
           }
         } catch (error) {
-          console.log('🔄 R2 直接獲取失敗，回退到 API:', error)
+          // console.log('🔄 R2 直接獲取失敗，回退到 API:', error)
         }
       }
 
       // 回退到 API 方式
+      // console.log('🔄 開始 API 回退邏輯')
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 35000) // 35 秒超時
       
@@ -344,25 +395,25 @@ export default function Menu() {
         clearTimeout(timeoutId)
       }
     } catch (error) {
-      const { publicRuntimeConfig } = getConfig()
-      const basePath = publicRuntimeConfig?.root || ''
-      const protocol = window.location.protocol
-      const host = window.location.host
-      const encodedText = encodeURIComponent(text)
-      const errorApiUrl = `${protocol}//${host}${basePath}/api/tts/${encodedText}/`
+      // const { publicRuntimeConfig } = getConfig()
+      // const basePath = publicRuntimeConfig?.root || ''
+      // const protocol = window.location.protocol
+      // const host = window.location.host
+      // const encodedText = encodeURIComponent(text)
+      // const errorApiUrl = `${protocol}//${host}${basePath}/api/tts/${encodedText}/`
       
-      console.error('TTS error details:', {
-        error,
-        text,
-        apiUrl: errorApiUrl,
-        userAgent: navigator.userAgent,
-        timestamp: new Date().toISOString()
-      })
+      // console.error('TTS error details:', {
+      //   error,
+      //   text,
+      //   apiUrl: errorApiUrl,
+      //   userAgent: navigator.userAgent,
+      //   timestamp: new Date().toISOString()
+      // })
       
       // 檢查是否是網路錯誤
-      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        console.error('Network error - possibly CORS or connectivity issue')
-      }
+      // if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      //   console.error('Network error - possibly CORS or connectivity issue')
+      // }
       
       setIsPlaying(false)
       setAudioProgress(null)
