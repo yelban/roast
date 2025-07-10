@@ -288,12 +288,23 @@ export default function Menu() {
           const r2Controller = new AbortController()
           const r2TimeoutId = setTimeout(() => r2Controller.abort(), 15000) // 15 秒超時
           
-          const r2Response = await fetch(r2AudioUrl, {
+          // 首次嘗試使用正常快取
+          let r2Response = await fetch(r2AudioUrl, {
             method: 'GET',
             mode: 'cors',
-            cache: 'no-cache', // 避免快取 CORS 失敗結果
+            cache: 'default',
             credentials: 'omit',
             signal: r2Controller.signal
+          }).catch(async (error) => {
+            // 如果 CORS 失敗，嘗試無快取重試一次
+            console.log('🔄 首次 R2 請求失敗，嘗試無快取重試:', error.message)
+            return await fetch(r2AudioUrl, {
+              method: 'GET',
+              mode: 'cors',
+              cache: 'no-cache',
+              credentials: 'omit',
+              signal: r2Controller.signal
+            })
           })
           
           clearTimeout(r2TimeoutId)
