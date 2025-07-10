@@ -44,3 +44,9 @@ yarn-error.log*
 next-env.d.ts
 
 certificates
+
+.cursorindexingignore
+.specstory
+
+CLOUDFLARE_R2_SETUP.md
+PRD.md

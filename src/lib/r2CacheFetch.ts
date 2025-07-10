@@ -242,6 +242,76 @@ export interface CacheResult {
   metadata?: Record<string, string>
 }
 
+// 檢查快取來源介面
+export interface CacheAvailability {
+  source: 'r2' | 'blob' | 'miss'
+  publicUrl?: string  // 如果可用，提供公開 URL
+}
+
+// 快速檢查快取是否可用（不下載內容）
+export async function checkCacheAvailability(hashId: string): Promise<CacheAvailability> {
+  // 在開發環境中禁用重導向，避免 CORS 和本地開發問題
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Development mode: skipping redirect optimization')
+    return { source: 'miss' }
+  }
+
+  const r2 = getR2Cache()
+  
+  // 1. 檢查 R2 公開 URL 是否可用
+  if (r2 && process.env.CLOUDFLARE_R2_PUBLIC_URL) {
+    try {
+      const key = generateCacheKey(hashId)
+      const publicUrl = `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${key}`
+      
+      // 使用 HEAD 請求快速檢查檔案存在，增加短超時以避免長時間等待
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000)
+      
+      try {
+        const response = await fetch(publicUrl, { 
+          method: 'HEAD',
+          signal: controller.signal
+        })
+        
+        if (response.ok) {
+          console.log('🔥 R2 Cache available (redirect):', hashId)
+          return { source: 'r2', publicUrl }
+        }
+      } finally {
+        clearTimeout(timeoutId)
+      }
+    } catch (error) {
+      console.warn('R2 public URL check failed:', error)
+    }
+  }
+
+  // 2. 檢查 Vercel Blob 是否可用
+  try {
+    const blobUrl = `${process.env.BLOB_STORE_URL}/tts-cache/${hashId}.mp3`
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 3000)
+    
+    try {
+      const response = await fetch(blobUrl, { 
+        method: 'HEAD',
+        signal: controller.signal
+      })
+      
+      if (response.ok) {
+        console.log('☁️ Blob Cache available (redirect):', hashId)
+        return { source: 'blob', publicUrl: blobUrl }
+      }
+    } finally {
+      clearTimeout(timeoutId)
+    }
+  } catch (error) {
+    console.warn('Blob cache check failed:', error)
+  }
+
+  return { source: 'miss' }
+}
+
 export async function getCachedAudio(hashId: string): Promise<CacheResult> {
   const r2 = getR2Cache()
   

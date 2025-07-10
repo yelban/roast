@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { generateHash } from '@/lib/utils'
 import { put } from '@vercel/blob'
-import { getCachedAudio, setCachedAudio } from '@/lib/r2CacheFetch'
+import { getCachedAudio, setCachedAudio, checkCacheAvailability } from '@/lib/r2CacheFetch'
 import 'server-only'
 
 // 快取模式設定
@@ -207,13 +207,32 @@ export default async function handler(
       return;
     }
 
-    // 檢查快取 (使用新的 R2 整合介面)
+    // 優先檢查快取可用性 (重導向優化)
+    console.time(`checkCacheAvailability-${hashId}`);
+    const cacheAvailability = await checkCacheAvailability(hashId);
+    console.timeEnd(`checkCacheAvailability-${hashId}`);
+
+    // 如果快取可用且有公開 URL，直接重導向
+    if (cacheAvailability.source !== 'miss' && cacheAvailability.publicUrl) {
+      console.log(`🚀 快取重導向 (${cacheAvailability.source}):`, cacheAvailability.publicUrl);
+      logCacheStatus(req, hashId, cacheAvailability.source);
+      
+      // 設定重導向 headers
+      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300'); // 重導向本身可以快取 5 分鐘
+      res.setHeader('Location', cacheAvailability.publicUrl);
+      
+      console.log(`⚡ 重導向回應時間: ${Date.now() - startTime}ms`);
+      res.status(302).end();
+      return;
+    }
+
+    // 如果快速檢查失敗，回退到傳統快取檢查（確保向後相容）
     console.time(`getCachedAudio-${hashId}`);
     const { buffer: cachedAudio, source: cacheSource } = await getCachedAudio(hashId);
     console.timeEnd(`getCachedAudio-${hashId}`);
 
     if (cachedAudio) {
-      console.log(`✅ 快取命中 (${cacheSource}):`, cachedAudio.length, 'bytes');
+      console.log(`✅ 快取命中 (回退模式-${cacheSource}):`, cachedAudio.length, 'bytes');
       logCacheStatus(req, hashId, cacheSource);
       res.setHeader('Content-Type', 'audio/mpeg');
       res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
@@ -226,7 +245,7 @@ export default async function handler(
       res.setHeader('CF-Cache-Status', 'DYNAMIC');
       res.setHeader('X-Content-Type-Options', 'nosniff');
 
-      console.log(`⚡ 快取回應時間: ${Date.now() - startTime}ms`);
+      console.log(`⚡ 回退模式回應時間: ${Date.now() - startTime}ms`);
       res.send(cachedAudio);
       return;
     }

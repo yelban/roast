@@ -266,23 +266,32 @@ export default function Menu() {
       const timeoutId = setTimeout(() => controller.abort(), 35000) // 35 秒超時
       
       try {
-        const response = await fetch(apiUrl, {
+        // 配置請求選項，包含重導向處理
+        const fetchOptions = {
           headers: {
             'Accept': 'audio/mpeg',
             'If-None-Match': `"${textHash}"`,
           },
-          cache: 'force-cache', // 強制使用快取
-          signal: controller.signal
-        })
+          cache: 'force-cache' as RequestCache, // 強制使用快取
+          signal: controller.signal,
+          redirect: 'follow' as RequestRedirect, // 自動跟隨重導向
+          mode: 'cors' as RequestMode // 允許跨域請求
+        }
+
+        const response = await fetch(apiUrl, fetchOptions)
 
         if (response.status === 304) {
           const cacheResponse = await caches.match(apiUrl)
           if (!cacheResponse) {
             const freshResponse = await fetch(apiUrl, {
               headers: { 'Accept': 'audio/mpeg' },
-              signal: controller.signal
+              signal: controller.signal,
+              redirect: 'follow' as RequestRedirect,
+              mode: 'cors' as RequestMode
             })
-            if (!freshResponse.ok) throw new Error('TTS request failed')
+            if (!freshResponse.ok) {
+              throw new Error(`TTS request failed: ${freshResponse.status} ${freshResponse.statusText}`)
+            }
             
             const cache = await caches.open('tts-cache')
             await cache.put(apiUrl, freshResponse.clone())
@@ -292,17 +301,41 @@ export default function Menu() {
           return await playAudio(cacheResponse)
         }
 
-        if (!response.ok) throw new Error('TTS request failed')
+        if (!response.ok) {
+          throw new Error(`TTS request failed: ${response.status} ${response.statusText}`)
+        }
         
-        const cache = await caches.open('tts-cache')
-        await cache.put(apiUrl, response.clone())
+        // 只有當響應是來自我們的 API 時才快取
+        if (response.url.includes('/api/tts/')) {
+          const cache = await caches.open('tts-cache')
+          await cache.put(apiUrl, response.clone())
+        }
         
         return await playAudio(response)
       } finally {
         clearTimeout(timeoutId)
       }
     } catch (error) {
-      console.error('TTS error:', error)
+      const { publicRuntimeConfig } = getConfig()
+      const basePath = publicRuntimeConfig?.root || ''
+      const protocol = window.location.protocol
+      const host = window.location.host
+      const encodedText = encodeURIComponent(text)
+      const errorApiUrl = `${protocol}//${host}${basePath}/api/tts/${encodedText}/`
+      
+      console.error('TTS error details:', {
+        error,
+        text,
+        apiUrl: errorApiUrl,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+      })
+      
+      // 檢查是否是網路錯誤
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        console.error('Network error - possibly CORS or connectivity issue')
+      }
+      
       setIsPlaying(false)
       setAudioProgress(null)
     } finally {
