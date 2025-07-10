@@ -123,7 +123,7 @@ export function getPopularItems(limit: number = 20): CacheMetric[] {
       const score = metric.hitCount * timeDecay
       return { ...metric, score }
     })
-    .sort((a, b) => (b as any).score - (a as any).score)
+    .sort((a: CacheMetric & { score: number }, b: CacheMetric & { score: number }) => b.score - a.score)
     .slice(0, limit)
 }
 

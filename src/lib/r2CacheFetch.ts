@@ -281,7 +281,7 @@ export async function getCachedAudio(hashId: string): Promise<CacheResult> {
 }
 
 export async function setCachedAudio(hashId: string, audioBuffer: Buffer, metadata?: Record<string, string>): Promise<void> {
-  const promises: Promise<any>[] = []
+  const promises: Promise<boolean | void>[] = []
 
   // 1. 儲存到 R2 (優先)
   const r2 = getR2Cache()
