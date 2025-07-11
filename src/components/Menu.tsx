@@ -201,7 +201,7 @@ export default function Menu() {
       const protocol = window.location.protocol
       const host = window.location.host
       const encodedText = encodeURIComponent(text)
-      const apiUrl = `${protocol}//${host}${basePath}/api/tts/${encodedText}/`
+      const apiUrl = `${protocol}//${host}${basePath}/api/tts/${encodedText}`
 
       const playAudio = async (audioResponse: Response) => {
         // 記錄快取使用指標
