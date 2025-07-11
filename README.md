@@ -288,6 +288,21 @@ navigator.serviceWorker.controller.postMessage({
 - 重新註冊 Service Worker
 - 檢查快取策略設定
 
+**Cloudflare R2 CORS 問題**
+- **症狀**: 特定音訊檔案需要多次連線，瀏覽器 CORS 錯誤，但 curl 測試正常
+- **根本原因**: Cloudflare CDN 快取了沒有 CORS 標頭的舊版本檔案
+- **解決方案**: 
+  1. 進入 Cloudflare 控制台 → Caching → Configuration → Purge Cache
+  2. 選擇 "Custom Purge" → "Purge by URL"
+  3. 輸入問題檔案的完整 URL (例: `https://tts-cache.36.to/檔案名.mp3`)
+  4. 點擊 "Purge" 清除快取
+  5. 等待 5-10 分鐘讓變更生效
+  6. 測試瀏覽器音訊播放是否恢復正常
+- **預防措施**: 
+  - CORS 設定變更後，主動清除相關檔案的 CDN 快取
+  - 監控 `cf-cache-status` 標頭，確認是否從快取返回
+  - 定期檢查特定檔案的 CORS 標頭是否正確
+
 ### 除錯工具
 ```bash
 # 檢查建置輸出
@@ -301,6 +316,13 @@ DEBUG=* npm run dev
 ```
 
 ## 📋 版本紀錄
+
+### v0.2.1 (2025-07-11)
+- 🐛 修復特定日文音訊檔案的多次連線問題
+- 🔧 簡化 R2 重試邏輯，提升連線穩定性
+- 🛠️ 修復 API URL 尾隨斜線導致的 308 重定向
+- 📝 新增 Cloudflare CDN 快取 CORS 問題解決指南
+- 🧹 清理生產環境除錯日誌輸出
 
 ### v0.2.0 (2025-07-10)
 - 🚀 重大架構升級：客戶端直接存取 Cloudflare R2
