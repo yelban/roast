@@ -283,7 +283,7 @@ export default function Menu() {
       if (r2PublicUrl) {
         try {
           const r2AudioUrl = `${r2PublicUrl}/${textHash}.mp3`
-          console.log('🔥 嘗試直接從 R2 獲取:', r2AudioUrl)
+          // console.log('🔥 嘗試直接從 R2 獲取:', r2AudioUrl)
           
           const r2Controller = new AbortController()
           const r2TimeoutId = setTimeout(() => r2Controller.abort(), 15000) // 15 秒超時
@@ -300,11 +300,11 @@ export default function Menu() {
           clearTimeout(r2TimeoutId)
           
           if (r2Response.ok) {
-            console.log('✅ R2 直接命中! 狀態:', r2Response.status)
+            // console.log('✅ R2 直接命中! 狀態:', r2Response.status)
             
             // 檢查回應內容
             const contentLength = r2Response.headers.get('content-length')
-            console.log('📦 R2 內容長度:', contentLength)
+            // console.log('📦 R2 內容長度:', contentLength)
             
             try {
               // 檢查是否能正確讀取內容
@@ -324,9 +324,9 @@ export default function Menu() {
                 headers: r2Response.headers
               })
               
-              console.log('🎵 開始播放 R2 音訊...')
+              // console.log('🎵 開始播放 R2 音訊...')
               await playAudio(audioResponse)
-              console.log('🎵 R2 音訊播放成功，結束函數')
+              // console.log('🎵 R2 音訊播放成功，結束函數')
               return // 成功播放，結束函數
             } catch (playError) {
               // console.warn('🚨 R2 音訊播放失敗，回退到 API:', playError)

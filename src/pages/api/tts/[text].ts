@@ -96,15 +96,7 @@ const logCacheStatus = (req: NextApiRequest, hashId: string, cacheSource: string
   const cfRay = req.headers['cf-ray']
   const cfCountry = req.headers['cf-ipcountry']
 
-  console.log(`Cache Status for ${hashId}:`, {
-    source: cacheSource,
-    edgeCache: cacheSource === 'edge' ? 'HIT' : 'MISS',
-    cfStatus: cfCacheStatus,
-    cfRay,
-    cfCountry,
-    userAgent: req.headers['user-agent'],
-    timestamp: new Date().toISOString()
-  });
+  // Cache status logging disabled for production
 };
 
 // 1. 在檔案模組層級宣告全域變數
@@ -143,7 +135,7 @@ async function performTokenFetch(): Promise<string> {
     // 設定 Token 與過期時間（9 分鐘，留 1 分鐘緩衝）
     cachedToken = accessToken;
     tokenExpiration = new Date(Date.now() + 9 * 60 * 1000);
-    console.log('💾 Fetched and cached new Azure TTS token');
+    // console.log('💾 Fetched and cached new Azure TTS token');
     
     return accessToken;
   } finally {
@@ -156,13 +148,13 @@ async function performTokenFetch(): Promise<string> {
 async function fetchAzureToken(): Promise<string> {
   // 檢查是否有已快取且未過期的 Token
   if (cachedToken && tokenExpiration && tokenExpiration > new Date()) {
-    console.log('🚀 Using cached Azure TTS token');
+    // console.log('🚀 Using cached Azure TTS token');
     return cachedToken;
   }
 
   // 防止併發重複請求
   if (tokenPromise) {
-    console.log('⏳ Waiting for concurrent token fetch');
+    // console.log('⏳ Waiting for concurrent token fetch');
     return await tokenPromise;
   }
 
@@ -180,7 +172,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const startTime = Date.now()
-  console.log('🎤 TTS API 請求開始:', req.url)
+  // console.log('🎤 TTS API 請求開始:', req.url)
   
   if (req.method !== 'GET') {
     res.status(405).end();
@@ -195,7 +187,7 @@ export default async function handler(
 
   try {
     const hashId = generateHashId(text);
-    console.log('📝 處理文字:', text, '| Hash:', hashId);
+    // console.log('📝 處理文字:', text, '| Hash:', hashId);
 
     // 檢查 If-None-Match 標頭
     const ifNoneMatch = req.headers['if-none-match'];
@@ -220,7 +212,7 @@ export default async function handler(
     console.timeEnd(`getCachedAudio-${hashId}`);
 
     if (cachedAudio) {
-      console.log(`✅ 快取命中 (回退模式-${cacheSource}):`, cachedAudio.length, 'bytes');
+      // console.log(`✅ 快取命中 (回退模式-${cacheSource}):`, cachedAudio.length, 'bytes');
       logCacheStatus(req, hashId, cacheSource);
       res.setHeader('Content-Type', 'audio/mpeg');
       res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
@@ -233,12 +225,12 @@ export default async function handler(
       res.setHeader('CF-Cache-Status', 'DYNAMIC');
       res.setHeader('X-Content-Type-Options', 'nosniff');
 
-      console.log(`⚡ 回退模式回應時間: ${Date.now() - startTime}ms`);
+      // console.log(`⚡ 回退模式回應時間: ${Date.now() - startTime}ms`);
       res.send(cachedAudio);
       return;
     }
 
-    console.log('🎙️ 快取未命中，呼叫 Azure TTS');
+    // console.log('🎙️ 快取未命中，呼叫 Azure TTS');
 
     // 3. 每次要呼叫 Azure TTS 前，先拿 token，已存在且未過期就不會重撈
     const accessToken = await fetchAzureToken();
@@ -294,8 +286,8 @@ export default async function handler(
     });
     console.timeEnd(`setCachedAudio-${hashId}`);
 
-    console.log(`🎵 Azure TTS 生成完成:`, audioBuffer.length, 'bytes');
-    console.log(`🕐 總處理時間: ${Date.now() - startTime}ms`);
+    // console.log(`🎵 Azure TTS 生成完成:`, audioBuffer.length, 'bytes');
+    // console.log(`🕐 總處理時間: ${Date.now() - startTime}ms`);
     
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable');
