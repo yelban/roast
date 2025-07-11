@@ -64,9 +64,10 @@ if (workbox) {
         {
           // 智能快取策略
           cacheKeyWillBeUsed: async ({ request }) => {
-            // 使用 URL 中的文字作為快取鍵
+            // 使用 URL 中的文字作為快取鍵，確保移除所有尾隨斜線
             const url = new URL(request.url)
-            const text = decodeURIComponent(url.pathname.split('/api/tts/')[1]?.replace('/', '') || '')
+            const pathPart = url.pathname.split('/api/tts/')[1] || ''
+            const text = decodeURIComponent(pathPart.replace(/\/+$/, '')) // 移除所有尾隨斜線
             return `tts-${text.substring(0, 50)}` // 限制長度
           },
           cacheWillUpdate: async ({ response }) => {
