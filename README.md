@@ -44,13 +44,14 @@ PWA & Caching:
 ### 快取架構
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Browser Cache │────│  Cloudflare R2  │────│   Vercel API    │
-│   (Service SW)  │    │   (直接存取)     │    │   (回退處理)     │
+│ Service Worker  │────│  Cloudflare R2  │────│   Vercel API    │
+│   (超強快取)     │    │   (直接存取)     │    │   (回退處理)     │
 │                 │    │                 │    │                 │
-│ • 離線快取       │    │ • 直接 GET 請求  │    │ • 檔案不存在時   │
-│ • 即時存取       │    │ • 零中轉延遲     │    │ • Azure TTS 生成 │
-│ • 90天 TTL      │    │ • 全球 CDN      │    │ • 檔案上傳到 R2  │
-│ • 背景同步       │    │ • 1年 TTL       │    │ • 回傳音訊內容   │
+│ • R2 音訊: 1年   │    │ • 直接 GET 請求  │    │ • 檔案不存在時   │
+│ • API 快取: 90天 │    │ • 零中轉延遲     │    │ • Azure TTS 生成 │
+│ • 持久性存儲     │    │ • 全球 CDN      │    │ • 檔案上傳到 R2  │
+│ • 1000檔案容量  │    │ • 1年 TTL       │    │ • 回傳音訊內容   │
+│ • 毫秒級響應     │    │ • CORS 優化     │    │ • 智能回退機制   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -213,11 +214,14 @@ GET /api/tts/health     # TTS 服務健康檢查
 - **TTS 響應時間**: < 3s (95% 情況)
 
 ### 快取策略
-- **瀏覽器快取**: 立即響應 (< 50ms)
+- **Service Worker 快取**: 毫秒級響應 (< 50ms)
+  - R2 音訊檔案：1年超長期快取
+  - API 響應：90天智能快取
+  - 持久性存儲保護，不易被清理
 - **R2 直接存取**: 零中轉延遲 (< 200ms)
 - **API 回退處理**: 檔案不存在時生成 (< 500ms)
 - **預熱機制**: 80+ 常用項目預生成
-- **智能快取**: 基於使用頻率自動優化
+- **智能快取**: 支援 1000+ 音訊檔案永久快取
 
 ## 🚀 部署指南
 
@@ -254,10 +258,27 @@ curl https://your-domain.com/api/tts/health
 
 ### 快取管理
 ```javascript
-// 清理 Service Worker 快取
-navigator.serviceWorker.controller.postMessage({
+// 查看快取狀態
+navigator.serviceWorker.controller?.postMessage({
+  type: 'CACHE_MANAGEMENT',
+  action: 'GET_CACHE_INFO'
+});
+
+// 清理 API 快取
+navigator.serviceWorker.controller?.postMessage({
   type: 'CACHE_MANAGEMENT',
   action: 'CLEAR_CACHE'
+});
+
+// 清理 R2 音訊快取
+navigator.serviceWorker.controller?.postMessage({
+  type: 'CACHE_MANAGEMENT',
+  action: 'CLEAR_R2_CACHE'
+});
+
+// 檢查持久性存儲
+navigator.storage.estimate().then(estimate => {
+  console.log('存儲使用情況:', estimate);
 });
 ```
 
@@ -316,6 +337,14 @@ DEBUG=* npm run dev
 ```
 
 ## 📋 版本紀錄
+
+### v0.2.2 (2025-07-11)
+- ⚡ 實現音訊檔案超長期快取策略
+- 🔒 新增 R2 音訊檔案 1年本地快取
+- 💾 支援最多 1000 個音訊檔案永久快取
+- 🛡️ 請求持久性存儲權限，防止自動清理
+- 📊 增強快取管理：分別統計 API/R2 快取
+- 🚀 實現毫秒級音訊播放響應
 
 ### v0.2.1 (2025-07-11)
 - 🐛 修復特定日文音訊檔案的多次連線問題
