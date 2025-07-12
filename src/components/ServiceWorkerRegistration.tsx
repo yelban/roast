@@ -28,7 +28,18 @@ export function ServiceWorkerRegistration() {
       })
 
       // 初始註冊和首次檢查
-      wb.register().catch(error => {
+      wb.register().then(() => {
+        // 請求持久性存儲權限，提高快取持久性
+        if ('storage' in navigator && 'persist' in navigator.storage) {
+          navigator.storage.persist().then(persistent => {
+            if (persistent) {
+              console.log('✅ 持久性存儲已啟用')
+            } else {
+              console.log('⚠️ 持久性存儲未啟用，快取可能被清理')
+            }
+          })
+        }
+      }).catch(error => {
         console.error('Service worker registration failed:', error)
       })
 

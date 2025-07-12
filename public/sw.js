@@ -89,6 +89,34 @@ if (workbox) {
     })
   );
 
+  // R2 音訊檔案快取 - 超長期快取
+  workbox.routing.registerRoute(
+    ({ url }) => url.hostname === 'tts-cache.36.to' && url.pathname.endsWith('.mp3'),
+    new workbox.strategies.CacheFirst({
+      cacheName: 'r2-audio-cache',
+      plugins: [
+        new workbox.expiration.ExpirationPlugin({
+          maxEntries: 1000, // 大量音訊檔案
+          maxAgeSeconds: 365 * 24 * 60 * 60, // 1年快取
+          purgeOnQuotaError: false // 不因空間不足自動清理
+        }),
+        {
+          cacheKeyWillBeUsed: async ({ request }) => {
+            // 使用檔案名作為快取鍵，忽略查詢參數
+            const url = new URL(request.url)
+            return url.pathname
+          },
+          cacheWillUpdate: async ({ response }) => {
+            // 只快取成功的音訊響應
+            return response.status === 200 && 
+                   response.headers.get('content-type')?.includes('audio') &&
+                   response.headers.get('access-control-allow-origin') // 確保 CORS 正確
+          }
+        }
+      ]
+    })
+  );
+
   // TTS 預熱 API 快取
   workbox.routing.registerRoute(
     ({ url }) => url.pathname.startsWith('/api/tts/prewarm'),
@@ -141,15 +169,29 @@ if (workbox) {
           break
           
         case 'GET_CACHE_INFO':
-          caches.open('api-tts-v2').then(cache => {
-            return cache.keys()
-          }).then(keys => {
+          Promise.all([
+            caches.open('api-tts-v2').then(cache => cache.keys()),
+            caches.open('r2-audio-cache').then(cache => cache.keys())
+          ]).then(([apiKeys, r2Keys]) => {
             event.ports[0]?.postMessage({ 
               success: true, 
-              cacheSize: keys.length,
-              cacheKeys: keys.map(req => req.url)
+              apiCacheSize: apiKeys.length,
+              r2CacheSize: r2Keys.length,
+              totalCacheSize: apiKeys.length + r2Keys.length,
+              apiCacheKeys: apiKeys.map(req => req.url),
+              r2CacheKeys: r2Keys.map(req => req.url)
             })
           })
+          break
+          
+        case 'CLEAR_R2_CACHE':
+          caches.delete('r2-audio-cache')
+            .then(() => {
+              event.ports[0]?.postMessage({ success: true })
+            })
+            .catch((error) => {
+              event.ports[0]?.postMessage({ success: false, error: error.message })
+            })
           break
       }
     }
