@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { Workbox } from 'workbox-window'
 
-const SW_VERSION = '1.0.0'
+// 版本號會在構建時通過環境變數注入，回退到手動版本
+const SW_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '0.2.2'
 const CHECK_INTERVAL = 24 * 60 * 60 * 1000  // 24小時
 
 export function ServiceWorkerRegistration() {

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import path from 'path';
 import { InjectManifest } from 'workbox-webpack-plugin';
+import packageJson from './package.json';
 
 const nextConfig: NextConfig = {
   // 開啟 React 嚴格模式
@@ -12,6 +13,11 @@ const nextConfig: NextConfig = {
   trailingSlash: false,
   publicRuntimeConfig: {
     root: process.env.BASE_PATH || '',
+  },
+
+  // 環境變數配置
+  env: {
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
   },
 
   serverExternalPackages: [],

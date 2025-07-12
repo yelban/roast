@@ -282,6 +282,25 @@ navigator.storage.estimate().then(estimate => {
 });
 ```
 
+### 版本管理與 PWA 更新
+```bash
+# 更新版本號（自動觸發 PWA 更新）
+npm version patch  # 0.2.2 → 0.2.3
+npm version minor  # 0.2.2 → 0.3.0
+npm version major  # 0.2.2 → 1.0.0
+
+# 構建時自動注入版本號
+npm run build
+
+# 部署後用戶會收到 PWA 更新提示
+```
+
+**版本自動化：**
+- 📦 **package.json**: 主版本源
+- 🔄 **Service Worker**: 自動讀取版本號
+- 📱 **PWA**: 版本變更時自動提示更新
+- ⏰ **檢查間隔**: 每 24 小時自動檢查更新
+
 ## 🛡️ 安全性
 
 - **HTTPS 強制**: 所有連線均使用 HTTPS
