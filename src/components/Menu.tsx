@@ -13,11 +13,24 @@ import { useLanguageStore, languageOrder } from '@/store/languageStore'
 import { getFontClass, getTitleFontClass } from '@/config/fonts'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Volume2 } from 'lucide-react'
+import { Volume2, Minus, Plus } from 'lucide-react'
 import { FontWrapper } from '@/components/FontWrapper'
 import { generateHash } from '@/lib/utils'
 import { recordCacheUsage } from '@/lib/cacheMetrics'
 import { StreamingAudioPlayer } from '@/lib/audioStreaming'
+
+// 日文數字映射
+const japaneseNumbers: { [key: number]: string } = {
+  1: '一つ',
+  2: '二つ', 
+  3: '三つ',
+  4: '四つ',
+  5: '五つ',
+  6: '六つ',
+  7: '七つ',
+  8: '八つ',
+  9: '九つ'
+}
 
 interface SelectedItem extends MenuItem {
   categoryName: {
@@ -36,6 +49,10 @@ export default function Menu() {
   const [isTTSLoading, setIsTTSLoading] = useState(false)
   const [audioPlayer, setAudioPlayer] = useState<StreamingAudioPlayer | null>(null)
   const [audioProgress, setAudioProgress] = useState<{ loaded: number; total: number } | null>(null)
+  const [quantity, setQuantity] = useState(1)
+  const [isQuantityTTSLoading, setIsQuantityTTSLoading] = useState(false)
+  const [preloadedQuantityAudios, setPreloadedQuantityAudios] = useState<{ [key: number]: string }>({})
+  const [isPreloading, setIsPreloading] = useState(false)
 
   const loadMenuData = async () => {
     try {
@@ -56,12 +73,75 @@ export default function Menu() {
     }
   }
 
+  // 預下載數量音檔
+  const preloadQuantityAudios = async () => {
+    if (isPreloading) return
+    
+    setIsPreloading(true)
+    console.log('🎵 開始預下載數量音檔...')
+    
+    const preloadedUrls: { [key: number]: string } = {}
+    
+    try {
+      const { publicRuntimeConfig } = getConfig()
+      const basePath = publicRuntimeConfig?.root || ''
+      const protocol = window.location.protocol
+      const host = window.location.host
+      
+      // 並行下載1-9的數量音檔
+      const downloadPromises = Object.entries(japaneseNumbers).map(async ([num, text]) => {
+        try {
+          const encodedText = encodeURIComponent(text)
+          const apiUrl = `${protocol}//${host}${basePath}/api/tts/${encodedText}`
+          
+          const response = await fetch(apiUrl, {
+            headers: { 'Accept': 'audio/mpeg' },
+            mode: 'cors' as RequestMode
+          })
+          
+          if (response.ok) {
+            const blob = await response.blob()
+            const blobUrl = URL.createObjectURL(blob)
+            preloadedUrls[parseInt(num)] = blobUrl
+            console.log(`🎵 預下載完成: ${text} (${num})`)
+          }
+        } catch (error) {
+          console.warn(`🎵 預下載失敗: ${text} (${num})`, error)
+        }
+      })
+      
+      await Promise.all(downloadPromises)
+      setPreloadedQuantityAudios(preloadedUrls)
+      console.log('🎵 所有數量音檔預下載完成！', preloadedUrls)
+      
+    } catch (error) {
+      console.error('🎵 預下載過程發生錯誤:', error)
+    } finally {
+      setIsPreloading(false)
+    }
+  }
+
   useEffect(() => {
     loadMenuData()
+    // 延遲一點開始預下載，避免阻塞主要內容載入
+    setTimeout(() => {
+      preloadQuantityAudios()
+    }, 1000)
+    
+    // 清理函數：釋放預下載的 blob URLs
+    return () => {
+      Object.values(preloadedQuantityAudios).forEach(url => {
+        if (url) {
+          URL.revokeObjectURL(url)
+        }
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleItemClick = (item: MenuItem, categoryName: { [key in Language]: string }) => {
     setSelectedItem({ ...item, categoryName })
+    setQuantity(1) // 重置數量為1
     setIsDialogOpen(true)
   }
 
@@ -435,6 +515,71 @@ export default function Menu() {
     }
   }
 
+  // 播放預下載的數量音檔
+  const playPreloadedQuantityAudio = async (quantity: number): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const audioUrl = preloadedQuantityAudios[quantity]
+      if (!audioUrl) {
+        reject(new Error(`預下載音檔不存在: ${quantity}`))
+        return
+      }
+      
+      const audio = new Audio(audioUrl)
+      audio.onended = () => resolve()
+      audio.onerror = () => reject(new Error(`播放預下載音檔失敗: ${quantity}`))
+      audio.play().catch(reject)
+    })
+  }
+
+  // 分離播放：先播放菜色名稱，然後播放數量
+  const playItemWithQuantity = async (itemName: string, quantity: number) => {
+    try {
+      // 如果正在播放，先停止
+      if (isPlaying || isQuantityTTSLoading) {
+        setIsPlaying(false)
+        setIsQuantityTTSLoading(false)
+        if (audioPlayer) {
+          audioPlayer.stop()
+          setAudioPlayer(null)
+        }
+        return
+      }
+
+      setIsQuantityTTSLoading(true)
+      
+      // 1. 播放菜色名稱
+      console.log('🎵 開始播放菜色名稱:', itemName)
+      await playTTS(itemName)
+      
+      // 2. 縮短等待時間（從2.5秒縮短到1秒）
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 3. 短暫停頓
+      await new Promise(resolve => setTimeout(resolve, 200))
+      
+      // 4. 播放數量（優先使用預下載的音檔）
+      const quantityText = japaneseNumbers[quantity]
+      if (quantityText) {
+        console.log('🎵 開始播放數量:', quantityText)
+        
+        if (preloadedQuantityAudios[quantity]) {
+          // 使用預下載的音檔，速度更快
+          console.log('🎵 使用預下載音檔:', quantity)
+          await playPreloadedQuantityAudio(quantity)
+        } else {
+          // 回退到TTS API
+          console.log('🎵 使用TTS API:', quantityText)
+          await playTTS(quantityText)
+        }
+      }
+      
+    } catch (error) {
+      console.error('連續播放錯誤:', error)
+    } finally {
+      setIsQuantityTTSLoading(false)
+    }
+  }
+
   if (isMenuLoading) {
     return <div className="container mx-auto p-8 text-center">載入中...</div>
   }
@@ -519,11 +664,12 @@ export default function Menu() {
                   <div className="text-xl text-red-900 font-bold text-center">
                     {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
                   </div>
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-4">
+                    {/* 原有的語音播放按鈕 */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      disabled={isTTSLoading || isPlaying}
+                      disabled={isTTSLoading || isPlaying || isQuantityTTSLoading}
                       className={`h-8 w-8 pt-2 inline-flex items-center justify-center hover:bg-gray-200 relative
                         focus-visible:ring-0 focus-visible:ring-offset-0
                         ${isTTSLoading ? 'animate-pulse' : ''}
@@ -551,19 +697,6 @@ export default function Menu() {
                         </>
                       )}
                     </Button>
-                    
-                    {/* 下載進度條 */}
-                    {audioProgress && audioProgress.total > 0 && (
-                      <div className="w-20 flex flex-col items-center gap-1">
-                        <Progress 
-                          value={(audioProgress.loaded / audioProgress.total) * 100} 
-                          className="h-1 w-full"
-                        />
-                        <span className="text-xs text-gray-500">
-                          {Math.round((audioProgress.loaded / audioProgress.total) * 100)}%
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </div>
               </DialogTitle>
@@ -571,12 +704,99 @@ export default function Menu() {
             </DialogHeader>
             {selectedItem && (
               <div className="space-y-4 px-0 pb-6">
+                {/* 數量選擇區域 */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-center mb-3">
+                    <span className="text-gray-600 font-medium">数量を選択</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-4">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
+                        ${quantity <= 1 
+                          ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                          : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
+                        }`}
+                      disabled={quantity <= 1}
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      <Minus className="h-6 w-6 stroke-2" />
+                    </Button>
+                    
+                    <div className="bg-white border-2 border-gray-300 rounded-lg px-6 py-3 min-w-[4rem] text-center shadow-md">
+                      <span className="text-2xl font-bold text-gray-800">{quantity}</span>
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
+                        ${quantity >= 9 
+                          ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                          : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
+                        }`}
+                      disabled={quantity >= 9}
+                      onClick={() => setQuantity(Math.min(9, quantity + 1))}
+                    >
+                      <Plus className="h-6 w-6 stroke-2" />
+                    </Button>
+                  </div>
+                  
+                  {/* 連續語音播放按鈕 */}
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      variant="default"
+                      className={`px-6 py-3 text-base bg-red-900 hover:bg-red-800 text-white rounded-lg
+                        focus-visible:ring-0 focus-visible:ring-offset-0
+                        ${isQuantityTTSLoading ? 'animate-pulse' : ''}
+                        disabled:opacity-50
+                      `}
+                      disabled={isTTSLoading || isPlaying || isQuantityTTSLoading}
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.stopPropagation()
+                        if (selectedItem?.name?.['ja']) {
+                          playItemWithQuantity(selectedItem.name['ja'], quantity)
+                        }
+                      }}
+                    >
+                      {isQuantityTTSLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>播放中...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Volume2 className="h-5 w-5" />
+                          <span>播放 {japaneseNumbers[quantity]}</span>
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* 價格顯示 */}
                 <div className="py-2">
-                  <div className="flex justify-end items-center gap-4">
+                  <div className="flex justify-center items-center gap-4">
                     <div className="font-semibold text-gray-600">価格</div>
                     <div className="text-2xl text-gray-900">{formatPrice(selectedItem.price)}</div>
                   </div>
                 </div>
+                
+                {/* 下載進度條 */}
+                {audioProgress && audioProgress.total > 0 && (
+                  <div className="flex justify-center">
+                    <div className="w-32 flex flex-col items-center gap-1">
+                      <Progress 
+                        value={(audioProgress.loaded / audioProgress.total) * 100} 
+                        className="h-2 w-full"
+                      />
+                      <span className="text-xs text-gray-500">
+                        {Math.round((audioProgress.loaded / audioProgress.total) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="pt-4 border-t">
                   <div className="font-semibold text-gray-600 mb-4">その他の言語</div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
