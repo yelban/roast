@@ -54,6 +54,55 @@ export default function Menu() {
   const [preloadedQuantityAudios, setPreloadedQuantityAudios] = useState<{ [key: number]: string }>({})
   const [isPreloading, setIsPreloading] = useState(false)
 
+  // 音效功能
+  const playButtonSound = (type: 'plus' | 'minus' | 'boundary') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      // 設定音效參數
+      switch (type) {
+        case 'plus':
+          // + 按鈕：較高頻率的短音
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
+          oscillator.frequency.exponentialRampToValueAtTime(900, audioContext.currentTime + 0.1)
+          break
+        case 'minus':
+          // - 按鈕：較低頻率的短音
+          oscillator.frequency.setValueAtTime(400, audioContext.currentTime)
+          oscillator.frequency.exponentialRampToValueAtTime(350, audioContext.currentTime + 0.1)
+          break
+        case 'boundary':
+          // 邊界音效：雙音調提示
+          oscillator.frequency.setValueAtTime(600, audioContext.currentTime)
+          oscillator.frequency.setValueAtTime(400, audioContext.currentTime + 0.1)
+          oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.2)
+          break
+      }
+      
+      // 音量控制
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime)
+      gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01)
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + (type === 'boundary' ? 0.3 : 0.15))
+      
+      oscillator.type = 'sine'
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + (type === 'boundary' ? 0.3 : 0.15))
+      
+      // 清理資源
+      oscillator.onended = () => {
+        audioContext.close()
+      }
+    } catch (error) {
+      // 如果音效播放失敗，靜默處理
+      console.warn('音效播放失敗:', error)
+    }
+  }
+
   const loadMenuData = async () => {
     try {
       setIsMenuLoading(true)
@@ -719,7 +768,17 @@ export default function Menu() {
                           : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
                         }`}
                       disabled={quantity <= 1}
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      onClick={() => {
+                        const newQuantity = Math.max(1, quantity - 1)
+                        if (newQuantity === 1 && quantity === 2) {
+                          // 從 2 變成 1 (最低值)，播放邊界音效
+                          playButtonSound('boundary')
+                        } else {
+                          // 普通 - 音效
+                          playButtonSound('minus')
+                        }
+                        setQuantity(newQuantity)
+                      }}
                     >
                       <Minus className="h-6 w-6 stroke-2" />
                     </Button>
@@ -737,7 +796,17 @@ export default function Menu() {
                           : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
                         }`}
                       disabled={quantity >= 9}
-                      onClick={() => setQuantity(Math.min(9, quantity + 1))}
+                      onClick={() => {
+                        const newQuantity = Math.min(9, quantity + 1)
+                        if (newQuantity === 9 && quantity === 8) {
+                          // 從 8 變成 9 (最高值)，播放邊界音效
+                          playButtonSound('boundary')
+                        } else {
+                          // 普通 + 音效
+                          playButtonSound('plus')
+                        }
+                        setQuantity(newQuantity)
+                      }}
                     >
                       <Plus className="h-6 w-6 stroke-2" />
                     </Button>

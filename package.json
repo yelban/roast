@@ -1,6 +1,6 @@
 {
   "name": "roast",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000 --hostname 0.0.0.0",
