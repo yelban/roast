@@ -703,14 +703,14 @@ export default function Menu() {
           <FontWrapper>
             <DialogHeader>
               <DialogTitle>
-                <div className="bg-gray-100 p-4 rounded-lg relative">
-                  <div className={`absolute top-2 left-4 text-base text-gray-500 ${getTitleFontClass('ja')} flex items-center gap-2`}>
+                <div className="bg-gray-100 p-3 rounded-lg mt-8">
+                  <div className={`text-center text-sm text-gray-600 mb-2 ${getTitleFontClass('ja')}`}>
                     {selectedItem?.categoryName?.['ja']}
                   </div>
-                  <div className="text-4xl text-red-900 font-bold mt-5 text-center">
+                  <div className="text-3xl text-red-900 font-bold text-center">
                     {selectedItem?.name?.ja?.split(/[()（]/)[0]}
                   </div>
-                  <div className="text-xl text-red-900 font-bold text-center">
+                  <div className="text-lg text-red-900 font-bold text-center">
                     {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
                   </div>
                   <div className="flex flex-col items-center gap-4">
@@ -752,10 +752,10 @@ export default function Menu() {
               <DialogDescription className="sr-only">商品詳細資訊</DialogDescription>
             </DialogHeader>
             {selectedItem && (
-              <div className="space-y-4 px-0 pb-6">
+              <div className="space-y-2 px-0 pb-2">
                 {/* 數量選擇區域 */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="text-center mb-3">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="text-center mb-2">
                     <span className="text-gray-600 font-medium">数量を選択</span>
                   </div>
                   <div className="flex items-center justify-center gap-4">
@@ -866,20 +866,20 @@ export default function Menu() {
                     </div>
                   </div>
                 )}
-                <div className="pt-4 border-t">
-                  <div className="font-semibold text-gray-600 mb-4">その他の言語</div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <span className="block text-sm text-gray-500 mb-1">台湾語</span>
-                      <div className="text-gray-900 text-xl">{selectedItem.name['zh-tw']}</div>
+                <div className="pt-2 border-t">
+                  <div className="font-semibold text-gray-600 mb-2">その他の言語</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <span className="block text-xs text-gray-500 mb-1">台湾語</span>
+                      <div className="text-gray-900 text-lg">{selectedItem.name['zh-tw']}</div>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <span className="block text-sm text-gray-500 mb-1">中国語</span>
-                      <div className="text-gray-900 text-xl">{selectedItem.name['zh-cn']}</div>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <span className="block text-xs text-gray-500 mb-1">中国語</span>
+                      <div className="text-gray-900 text-lg">{selectedItem.name['zh-cn']}</div>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg md:col-span-2">
-                      <span className="block text-sm text-gray-500 mb-1">English</span>
-                      <div className="text-gray-900 text-xl">{selectedItem.name.en}</div>
+                    <div className="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                      <span className="block text-xs text-gray-500 mb-1">English</span>
+                      <div className="text-gray-900 text-lg">{selectedItem.name.en}</div>
                     </div>
                   </div>
                 </div>
