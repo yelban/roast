@@ -14,10 +14,6 @@ export default function QRCodeGenerator() {
     ? `${window.location.protocol}//${window.location.host}`
     : ''
 
-  useEffect(() => {
-    generateAllQRCodes()
-  }, [tables])
-
   const generateQRCode = async (tableNumber: string): Promise<string> => {
     try {
       const url = `${baseUrl}/?table=${tableNumber}`
@@ -37,6 +33,10 @@ export default function QRCodeGenerator() {
     }
     setQrCodes(codes)
   }
+
+  useEffect(() => {
+    generateAllQRCodes()
+  }, [tables]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const addTable = () => {
     if (newTable && !tables.includes(newTable)) {
@@ -156,6 +156,7 @@ export default function QRCodeGenerator() {
                   <h3 className="text-xl font-bold mb-2">Table: {table}</h3>
                   {qrCodes[table] && (
                     <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={qrCodes[table]} 
                         alt={`Table ${table} QR Code`}
