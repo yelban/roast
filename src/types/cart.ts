@@ -14,6 +14,7 @@ export interface CartState {
   items: CartItem[]
   isOpen: boolean
   openedFrom: 'menu' | 'dialog' | null
+  tableNumber: string | null
   addItem: (item: Omit<CartItem, 'id' | 'addedAt'>) => void
   updateQuantity: (id: string, quantity: number) => void
   removeItem: (id: string) => void
@@ -24,4 +25,6 @@ export interface CartState {
   getItemCount: () => number
   loadFromStorage: () => void
   saveToStorage: () => void
+  setTableNumber: (tableNumber: string | null) => void
+  loadTableNumber: () => void
 }

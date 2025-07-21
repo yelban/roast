@@ -2,11 +2,13 @@ import { create } from 'zustand'
 import { CartState, CartItem } from '@/types/cart'
 
 const CART_STORAGE_KEY = 'stamina-en-cart'
+const TABLE_STORAGE_KEY = 'stamina-en-table'
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   isOpen: false,
   openedFrom: null,
+  tableNumber: null,
 
   addItem: (item) => {
     set((state) => {
@@ -110,6 +112,26 @@ export const useCartStore = create<CartState>((set, get) => ({
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items }))
     } catch (error) {
       console.error('Failed to save cart to storage:', error)
+    }
+  },
+
+  setTableNumber: (tableNumber) => {
+    set({ tableNumber })
+    if (typeof window !== 'undefined' && tableNumber) {
+      localStorage.setItem(TABLE_STORAGE_KEY, tableNumber)
+    }
+  },
+
+  loadTableNumber: () => {
+    if (typeof window === 'undefined') return
+
+    try {
+      const storedTable = localStorage.getItem(TABLE_STORAGE_KEY)
+      if (storedTable) {
+        set({ tableNumber: storedTable })
+      }
+    } catch (error) {
+      console.error('Failed to load table number from storage:', error)
     }
   },
 }))

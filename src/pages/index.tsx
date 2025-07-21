@@ -4,6 +4,8 @@ import Seo from '@/components/Seo'
 import { Language } from '@/types/menu'
 import Image from 'next/image'
 import { useLanguageStore } from '@/store/languageStore'
+import { useCartStore } from '@/store/cartStore'
+import { useRouter } from 'next/router'
 
 const getMetadata = (language: Language) => {
   switch (language) {
@@ -36,10 +38,19 @@ const getMetadata = (language: Language) => {
 
 export default function Home() {
   const { language, setLanguage, setSlideDirection, setNextLanguage, initializeLanguage } = useLanguageStore()
+  const { setTableNumber, loadTableNumber } = useCartStore()
+  const router = useRouter()
   
   useEffect(() => {
     initializeLanguage()
-  }, [initializeLanguage])
+    loadTableNumber()
+    
+    // 從 URL 參數讀取桌號
+    const { table } = router.query
+    if (table && typeof table === 'string') {
+      setTableNumber(table)
+    }
+  }, [initializeLanguage, loadTableNumber, router.query, setTableNumber])
 
   // 語言順序定義
   const languageOrder: Language[] = ['ja', 'zh-tw', 'zh-cn', 'en']

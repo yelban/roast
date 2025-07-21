@@ -7,7 +7,7 @@ import { FontWrapper } from '@/components/FontWrapper'
 import { t } from '@/config/translations'
 
 export default function CartDrawer() {
-  const { isOpen, toggleCart, items, updateQuantity, removeItem, clearCart, getTotalWithTax, openedFrom } = useCartStore()
+  const { isOpen, toggleCart, items, updateQuantity, removeItem, clearCart, getTotalWithTax, openedFrom, tableNumber } = useCartStore()
   const { language } = useLanguageStore()
   
   const { subtotal, tax, total } = getTotalWithTax()
@@ -28,7 +28,17 @@ export default function CartDrawer() {
         <FontWrapper>
           <SheetHeader className="border-b dark:border-gray-700 pb-4">
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-2xl font-bold text-gray-900 dark:text-white">{t('cart', language)}</SheetTitle>
+              <SheetTitle className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <span>{t('cart', language)}</span>
+                {tableNumber && (
+                  <span className="text-lg font-normal text-gray-600 dark:text-gray-400">
+                    {language === 'ja' && `テーブル: ${tableNumber}`}
+                    {language === 'zh-tw' && `${tableNumber}桌`}
+                    {language === 'zh-cn' && `${tableNumber}桌`}
+                    {language === 'en' && `Table: ${tableNumber}`}
+                  </span>
+                )}
+              </SheetTitle>
               <Button
                 variant="ghost"
                 size="sm"
