@@ -13,11 +13,13 @@ import { useLanguageStore, languageOrder } from '@/store/languageStore'
 import { getFontClass, getTitleFontClass } from '@/config/fonts'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Volume2, Minus, Plus } from 'lucide-react'
+import { Volume2, Minus, Plus, ShoppingCart } from 'lucide-react'
 import { FontWrapper } from '@/components/FontWrapper'
 import { generateHash } from '@/lib/utils'
 import { recordCacheUsage } from '@/lib/cacheMetrics'
 import { StreamingAudioPlayer } from '@/lib/audioStreaming'
+import { useCartStore } from '@/store/cartStore'
+import { t } from '@/config/translations'
 
 // 日文數字映射
 const japaneseNumbers: { [key: number]: string } = {
@@ -40,6 +42,7 @@ interface SelectedItem extends MenuItem {
 
 export default function Menu() {
   const { language, setLanguage, slideDirection, setSlideDirection, nextLanguage, setNextLanguage } = useLanguageStore()
+  const { addItem, getItemCount, toggleCart, items } = useCartStore()
   const [menuData, setMenuData] = useState<MenuData | null>(null)
   const [isMenuLoading, setIsMenuLoading] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -263,6 +266,20 @@ export default function Menu() {
       setSlideDirection(null)
       setNextLanguage(null)
     }, 300)
+  }
+
+  // 檢查菜品是否在購物車中並返回數量
+  const getItemInCart = (item: MenuItem) => {
+    const cartItem = items.find(cartItem => {
+      const itemPrice = typeof item.price === 'object' 
+        ? item.price.normal || 0 
+        : typeof item.price === 'number' 
+        ? item.price 
+        : 0
+      
+      return cartItem.name['ja'] === item.name['ja'] && cartItem.price === itemPrice
+    })
+    return cartItem ? cartItem.quantity : 0
   }
 
   const formatPrice = (price: number | { normal?: number; half?: number } | string): JSX.Element => {
@@ -650,21 +667,39 @@ export default function Menu() {
               </CardHeader>
               <div className="p-6 pt-0">
                 <div className="space-y-2">
-                  {categoryData?.items?.map((item, index) => (
-                    <div 
-                      key={index} 
-                      className="flex justify-between border-b pb-2 p-0 cursor-pointer hover:bg-gray-50 rounded"
-                      onClick={() => handleItemClick(item, categoryData.name)}
-                    >
-                      <span className="text-2xl">{item?.name?.[lang] || '未知項目'}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-xl">
-                          {formatPrice(item.price)}
-                        </span>
-                        <span className="flex items-center text-gray-300">❯</span>
+                  {categoryData?.items?.map((item, index) => {
+                    const cartQuantity = getItemInCart(item)
+                    const isInCart = cartQuantity > 0
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`flex justify-between border-b pb-2 p-2 cursor-pointer rounded transition-all duration-200 ${
+                          isInCart 
+                            ? 'bg-gray-100 border-gray-300 hover:bg-gray-150 shadow-sm' 
+                            : 'hover:bg-gray-50'
+                        }`}
+                        onClick={() => handleItemClick(item, categoryData.name)}
+                      >
+                        <div className="flex items-center relative">
+                          <span className={`text-2xl ${isInCart ? 'text-gray-800 font-medium' : ''}`}>
+                            {item?.name?.[lang] || '未知項目'}
+                          </span>
+                          {isInCart && (
+                            <span className="absolute -top-1 -right-5 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
+                              {cartQuantity}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-semibold text-xl ${isInCart ? 'text-gray-700' : ''}`}>
+                            {formatPrice(item.price)}
+                          </span>
+                          <span className={`flex items-center ${isInCart ? 'text-gray-500' : 'text-gray-300'}`}>❯</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </Card>
@@ -676,6 +711,23 @@ export default function Menu() {
 
   return (
     <div className="relative min-h-screen">
+      {/* 固定在右下角的購物車按鈕 */}
+      <Button
+        variant="default"
+        size="lg"
+        className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 bg-red-600 hover:bg-red-700 shadow-lg"
+        onClick={() => toggleCart('menu')}
+      >
+        <div className="relative">
+          <ShoppingCart className="h-6 w-6 text-white" />
+          {getItemCount() > 0 && (
+            <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              {getItemCount()}
+            </span>
+          )}
+        </div>
+      </Button>
+      
       <div 
         className="relative overflow-auto"
         style={{ minHeight: 'calc(100vh - 72px)', WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}
@@ -756,7 +808,7 @@ export default function Menu() {
                 {/* 數量選擇區域 */}
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <div className="text-center mb-2">
-                    <span className="text-gray-600 font-medium">数量を選択</span>
+                    <span className="text-gray-600 font-medium">{t('selectQuantity', language)}</span>
                   </div>
                   <div className="flex items-center justify-center gap-4">
                     <Button
@@ -882,6 +934,52 @@ export default function Menu() {
                       <div className="text-gray-900 text-lg">{selectedItem.name.en}</div>
                     </div>
                   </div>
+                </div>
+                
+                {/* 購物車按鈕區域 */}
+                <div className="pt-3 mt-3 border-t flex justify-between items-center">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="flex-1 mr-2 bg-red-600 hover:bg-red-700 text-white"
+                    onClick={() => {
+                      const price = typeof selectedItem.price === 'object' 
+                        ? selectedItem.price.normal || 0 
+                        : typeof selectedItem.price === 'number' 
+                        ? selectedItem.price 
+                        : 0
+                      
+                      addItem({
+                        name: selectedItem.name,
+                        price: price,
+                        quantity: quantity
+                      })
+                      
+                      setIsDialogOpen(false)
+                      setTimeout(() => {
+                        alert(`${t('addedToCart', language)}：${selectedItem.name[language]} x ${quantity}`)
+                      }, 100)
+                    }}
+                  >
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    {t('addToCart', language)}
+                  </Button>
+                  
+                  <Button
+                    variant="default"
+                    size="lg"
+                    className="relative bg-red-600 hover:bg-red-700 text-white h-12 w-12 p-0 rounded-full shadow-md"
+                    onClick={() => {
+                      toggleCart('dialog')
+                    }}
+                  >
+                    <ShoppingCart className="h-5 w-5 text-white" />
+                    {getItemCount() > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {getItemCount()}
+                      </span>
+                    )}
+                  </Button>
                 </div>
               </div>
             )}
