@@ -31,10 +31,10 @@ export const translations: {
     'ja': 'カートをクリア'
   },
   checkout: {
-    'zh-tw': '結帳',
-    'zh-cn': '结账',
-    'en': 'Checkout',
-    'ja': 'レジに進む'
+    'zh-tw': '送出訂單',
+    'zh-cn': '提交订单',
+    'en': 'Submit Order',
+    'ja': '注文を送信'
   },
   subtotal: {
     'zh-tw': '小計',
@@ -78,6 +78,25 @@ export const translations: {
     'zh-cn': '选择数量',
     'en': 'Select Quantity',
     'ja': '数量を選択'
+  },
+  // 訂單相關
+  orderSuccess: {
+    'zh-tw': '訂單已成功送出！',
+    'zh-cn': '订单已成功提交！',
+    'en': 'Order submitted successfully!',
+    'ja': '注文が正常に送信されました！'
+  },
+  orderFailed: {
+    'zh-tw': '訂單送出失敗，請稍後再試',
+    'zh-cn': '订单提交失败，请稍后重试',
+    'en': 'Failed to submit order, please try again',
+    'ja': '注文の送信に失敗しました。もう一度お試しください'
+  },
+  sendingOrder: {
+    'zh-tw': '正在送出訂單...',
+    'zh-cn': '正在提交订单...',
+    'en': 'Submitting order...',
+    'ja': '注文を送信中...'
   }
 }
 

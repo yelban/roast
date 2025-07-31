@@ -5,6 +5,7 @@ import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistratio
 import CartDrawer from '@/components/CartDrawer'
 import { useEffect } from 'react'
 import { useCartStore } from '@/store/cartStore'
+import { Toaster } from 'sonner'
 
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
@@ -18,6 +19,12 @@ export default function App({ Component, pageProps }: AppProps) {
         <Component {...pageProps} />
       </FontWrapper>
       <CartDrawer />
+      <Toaster 
+        position="top-center"
+        richColors
+        closeButton
+        theme="light"
+      />
     </>
   );
 }

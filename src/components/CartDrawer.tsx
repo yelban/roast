@@ -5,10 +5,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/com
 import { Trash2, Minus, Plus, X } from 'lucide-react'
 import { FontWrapper } from '@/components/FontWrapper'
 import { t } from '@/config/translations'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 export default function CartDrawer() {
   const { isOpen, toggleCart, items, updateQuantity, removeItem, clearCart, getTotalWithTax, openedFrom, tableNumber } = useCartStore()
   const { language } = useLanguageStore()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
   const { subtotal, tax, total } = getTotalWithTax()
   
@@ -131,12 +134,45 @@ export default function CartDrawer() {
                   </Button>
                   <Button
                     variant="default"
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white dark:bg-red-700 dark:hover:bg-red-800"
-                    onClick={() => {
-                      alert(t('checkoutNotAvailable', language))
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white dark:bg-red-700 dark:hover:bg-red-800 disabled:opacity-50"
+                    onClick={async () => {
+                      setIsSubmitting(true)
+                      try {
+                        const response = await fetch('/api/print-order', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            items,
+                            subtotal,
+                            tax,
+                            total,
+                            tableNumber,
+                            language
+                          }),
+                        })
+                        
+                        const result = await response.json()
+                        
+                        if (result.success) {
+                          toast.success(t('orderSuccess', language))
+                          clearCart()
+                          toggleCart()
+                        } else {
+                          toast.error(t('orderFailed', language))
+                          console.error('Order submission failed:', result)
+                        }
+                      } catch (error) {
+                        toast.error(t('orderFailed', language))
+                        console.error('Order submission error:', error)
+                      } finally {
+                        setIsSubmitting(false)
+                      }
                     }}
+                    disabled={isSubmitting}
                   >
-                    {t('checkout', language)}
+                    {isSubmitting ? t('sendingOrder', language) : t('checkout', language)}
                   </Button>
                 </div>
               </div>
