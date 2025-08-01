@@ -40,7 +40,11 @@ interface SelectedItem extends MenuItem {
   }
 }
 
-export default function Menu() {
+interface MenuProps {
+  mode?: 'customer' | 'pos'
+}
+
+export default function Menu({ mode = 'customer' }: MenuProps) {
   const { language, setLanguage, slideDirection, setSlideDirection, nextLanguage, setNextLanguage } = useLanguageStore()
   const { addItem, getItemCount, toggleCart, items } = useCartStore()
   const [menuData, setMenuData] = useState<MenuData | null>(null)
@@ -56,6 +60,7 @@ export default function Menu() {
   const [isQuantityTTSLoading, setIsQuantityTTSLoading] = useState(false)
   const [preloadedQuantityAudios, setPreloadedQuantityAudios] = useState<{ [key: number]: string }>({})
   const [isPreloading, setIsPreloading] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
 
   // 音效功能
   const playButtonSound = (type: 'plus' | 'minus' | 'boundary') => {
@@ -190,6 +195,14 @@ export default function Menu() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 設置默認選中第一個類別（POS模式用）
+  useEffect(() => {
+    if (mode === 'pos' && menuData && Object.keys(menuData).length > 0 && !selectedCategory) {
+      const firstCategory = Object.keys(menuData)[0]
+      setSelectedCategory(firstCategory)
+    }
+  }, [mode, menuData, selectedCategory])
 
   const handleItemClick = (item: MenuItem, categoryName: { [key in Language]: string }) => {
     setSelectedItem({ ...item, categoryName })
@@ -654,6 +667,116 @@ export default function Menu() {
     return <div className="container mx-auto p-8 text-center">沒有菜單資料</div>
   }
 
+
+  const formatPOSPrice = (price: number | { normal?: number; half?: number } | string) => {
+    if (typeof price === 'object') {
+      return price.normal ? `¥${price.normal.toLocaleString()}` : '¥0'
+    }
+    if (typeof price === 'string') {
+      // 如果是字串，嘗試解析或返回原值
+      const numPrice = parseFloat(price)
+      return isNaN(numPrice) ? price : `¥${numPrice.toLocaleString()}`
+    }
+    return `¥${price.toLocaleString()}`
+  }
+
+  const renderPOSContent = () => {
+    const cartItemCount = items.reduce((total, item) => total + item.quantity, 0)
+    const currentCategoryItems = menuData?.[selectedCategory]
+
+    return (
+      <div className="min-h-screen bg-gray-100 flex">
+        {/* 左側類別導航 */}
+        <div className="w-48 bg-white shadow-lg fixed left-0 top-[72px] bottom-0 overflow-y-auto z-40 border-t border-gray-200">
+          <nav className="py-2">
+            {Object.entries(menuData || {}).map(([categoryId, categoryData]) => (
+              <button
+                key={categoryId}
+                onClick={() => setSelectedCategory(categoryId)}
+                className={`w-full px-4 py-3 text-left transition-colors ${
+                  selectedCategory === categoryId
+                    ? 'bg-red-100 text-red-600 border-l-4 border-red-600'
+                    : 'hover:bg-gray-100 text-gray-900'
+                }`}
+              >
+                <div className="font-medium">{categoryData.name[language]}</div>
+                <div className={`text-sm ${selectedCategory === categoryId ? 'text-red-500' : 'text-gray-500'}`}>
+                  {categoryData.items.length} 品項
+                </div>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* 右側商品網格 */}
+        <div className="ml-48 flex-1 p-6">
+          {/* 頂部工具列 */}
+          <div className="bg-white rounded-lg shadow p-4 mb-6 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-800">
+              {currentCategoryItems?.name[language]}
+            </h2>
+            
+            {/* 購物車按鈕 */}
+            <Button
+              onClick={() => toggleCart('menu')}
+              className="relative bg-red-600 hover:bg-red-700 text-white"
+            >
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              {t('cart', language)}
+              {cartItemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-yellow-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold">
+                  {cartItemCount}
+                </span>
+              )}
+            </Button>
+          </div>
+
+          {/* 商品網格 */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {currentCategoryItems?.items.map((item, index) => {
+              const cartQuantity = getItemInCart(item)
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleItemClick(item, currentCategoryItems.name)}
+                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-5 text-left group relative border-2 border-transparent hover:border-red-200"
+                >
+                  {cartQuantity > 0 && (
+                    <span className="absolute -top-3 -right-3 bg-red-600 text-white rounded-full h-7 w-7 flex items-center justify-center text-sm font-bold z-10 shadow-md">
+                      {cartQuantity}
+                    </span>
+                  )}
+                  
+                  {/* 簡化的圖片區域 */}
+                  <div className="w-full h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-4 flex items-center justify-center border border-gray-300">
+                    <div className="text-2xl text-gray-400">🍽️</div>
+                  </div>
+                  
+                  {/* 文字內容區域 */}
+                  <div className="space-y-3">
+                    <h3 className="font-bold text-lg text-gray-800 group-hover:text-red-600 transition-colors duration-200 leading-tight min-h-[2.5rem] flex items-center">
+                      {item.name[language]}
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xl font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full">
+                        {formatPOSPrice(item.price)}
+                      </p>
+                      <div className="text-gray-400 group-hover:text-red-500 transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderMenuContent = (lang: Language) => (
     <div className={`w-full ${getFontClass(lang)}`}>
       <div className="container mx-auto px-4 py-8">
@@ -708,6 +831,256 @@ export default function Menu() {
       </div>
     </div>
   )
+
+  if (mode === 'pos') {
+    return (
+      <>
+        <div className="relative min-h-screen">
+          {renderPOSContent()}
+        </div>
+        
+        {/* 商品詳情對話框 - 與正常模式完全一致 */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent 
+            className="dialog-content bg-white rounded-lg max-w-[95%] md:max-w-lg focus:outline-none focus:ring-0"
+            onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
+            onTouchEnd={handleDialogTouchEnd}
+          >
+            <FontWrapper>
+              <DialogHeader>
+                <DialogTitle>
+                  <div className="bg-gray-100 p-3 rounded-lg mt-8">
+                    <div className={`text-center text-sm text-gray-600 mb-2 ${getTitleFontClass('ja')}`}>
+                      {selectedItem?.categoryName?.['ja']}
+                    </div>
+                    <div className="text-3xl text-red-900 font-bold text-center">
+                      {selectedItem?.name?.ja?.split(/[()（]/)[0]}
+                    </div>
+                    <div className="text-lg text-red-900 font-bold text-center">
+                      {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
+                    </div>
+                    <div className="flex flex-col items-center gap-4">
+                      {/* 原有的語音播放按鈕 */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={isTTSLoading || isPlaying || isQuantityTTSLoading}
+                        className={`h-8 w-8 pt-2 inline-flex items-center justify-center hover:bg-gray-200 relative
+                          focus-visible:ring-0 focus-visible:ring-offset-0
+                          ${isTTSLoading ? 'animate-pulse' : ''}
+                          ${isPlaying ? 'text-blue-600' : 'text-gray-600'}
+                        `}
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.stopPropagation()
+                          if (selectedItem?.name?.['ja']) {
+                            playTTS(selectedItem.name['ja'])
+                          }
+                        }}
+                      >
+                        {isTTSLoading ? (
+                          <div className="h-5 w-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <Volume2 className="h-5 w-5 fill-current" />
+                            {isPlaying && (
+                              <div className="absolute -right-[6px] flex items-center gap-[2px]">
+                                <div className="w-[2px] h-[8px] bg-blue-600 animate-sound-wave-1" />
+                                <div className="w-[2px] h-[12px] bg-blue-600 animate-sound-wave-2" />
+                                <div className="w-[2px] h-[16px] bg-blue-600 animate-sound-wave-3" />
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogTitle>
+                <DialogDescription className="sr-only">商品詳細資訊</DialogDescription>
+              </DialogHeader>
+              {selectedItem && (
+                <div className="space-y-2 px-0 pb-2">
+                  {/* 數量選擇區域 */}
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="text-center mb-2">
+                      <span className="text-gray-600 font-medium">{t('selectQuantity', language)}</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-4">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
+                          ${quantity <= 1 
+                            ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                            : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
+                          }`}
+                        disabled={quantity <= 1}
+                        onClick={() => {
+                          const newQuantity = Math.max(1, quantity - 1)
+                          if (newQuantity === 1 && quantity === 2) {
+                            // 從 2 變成 1 (最低值)，播放邊界音效
+                            playButtonSound('boundary')
+                          } else {
+                            // 普通 - 音效
+                            playButtonSound('minus')
+                          }
+                          setQuantity(newQuantity)
+                        }}
+                      >
+                        <Minus className="h-6 w-6 stroke-2" />
+                      </Button>
+                      
+                      <div className="bg-white border-2 border-gray-300 rounded-lg px-6 py-3 min-w-[4rem] text-center shadow-md">
+                        <span className="text-2xl font-bold text-gray-800">{quantity}</span>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
+                          ${quantity >= 9 
+                            ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                            : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
+                          }`}
+                        disabled={quantity >= 9}
+                        onClick={() => {
+                          const newQuantity = Math.min(9, quantity + 1)
+                          if (newQuantity === 9 && quantity === 8) {
+                            // 從 8 變成 9 (最高值)，播放邊界音效
+                            playButtonSound('boundary')
+                          } else {
+                            // 普通 + 音效
+                            playButtonSound('plus')
+                          }
+                          setQuantity(newQuantity)
+                        }}
+                      >
+                        <Plus className="h-6 w-6 stroke-2" />
+                      </Button>
+                    </div>
+                    
+                    {/* 連續語音播放按鈕 */}
+                    <div className="mt-4 flex justify-center">
+                      <Button
+                        variant="default"
+                        className={`px-6 py-3 text-base bg-red-900 hover:bg-red-800 text-white rounded-lg
+                          focus-visible:ring-0 focus-visible:ring-offset-0
+                          ${isQuantityTTSLoading ? 'animate-pulse' : ''}
+                          disabled:opacity-50
+                        `}
+                        disabled={isTTSLoading || isPlaying || isQuantityTTSLoading}
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.stopPropagation()
+                          if (selectedItem?.name?.['ja']) {
+                            playItemWithQuantity(selectedItem.name['ja'], quantity)
+                          }
+                        }}
+                      >
+                        {isQuantityTTSLoading ? (
+                          <div className="flex items-center gap-2">
+                            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>播放中...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Volume2 className="h-5 w-5" />
+                            <span>播放 {japaneseNumbers[quantity]}</span>
+                          </div>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* 價格顯示 */}
+                  <div className="py-2">
+                    <div className="flex justify-center items-center gap-4">
+                      <div className="font-semibold text-gray-600">価格</div>
+                      <div className="text-2xl text-gray-900">{formatPrice(selectedItem.price)}</div>
+                    </div>
+                  </div>
+                  
+                  {/* 下載進度條 */}
+                  {audioProgress && audioProgress.total > 0 && (
+                    <div className="flex justify-center">
+                      <div className="w-32 flex flex-col items-center gap-1">
+                        <Progress 
+                          value={(audioProgress.loaded / audioProgress.total) * 100} 
+                          className="h-2 w-full"
+                        />
+                        <span className="text-xs text-gray-500">
+                          {Math.round((audioProgress.loaded / audioProgress.total) * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t">
+                    <div className="font-semibold text-gray-600 mb-2">その他の言語</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <span className="block text-xs text-gray-500 mb-1">台湾語</span>
+                        <div className="text-gray-900 text-lg">{selectedItem.name['zh-tw']}</div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <span className="block text-xs text-gray-500 mb-1">中国語</span>
+                        <div className="text-gray-900 text-lg">{selectedItem.name['zh-cn']}</div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                        <span className="block text-xs text-gray-500 mb-1">English</span>
+                        <div className="text-gray-900 text-lg">{selectedItem.name.en}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 購物車按鈕區域 */}
+                  <div className="pt-3 mt-3 border-t flex justify-between items-center">
+                    <Button
+                      variant="default"
+                      size="lg"
+                      className="flex-1 mr-2 bg-red-600 hover:bg-red-700 text-white"
+                      onClick={() => {
+                        const price = typeof selectedItem.price === 'object' 
+                          ? selectedItem.price.normal || 0 
+                          : typeof selectedItem.price === 'number' 
+                          ? selectedItem.price 
+                          : 0
+                        
+                        addItem({
+                          name: selectedItem.name,
+                          price: price,
+                          quantity: quantity
+                        })
+                        
+                        setIsDialogOpen(false)
+                        // POS模式不顯示alert，直接關閉對話框
+                      }}
+                    >
+                      <ShoppingCart className="mr-2 h-5 w-5" />
+                      {t('addToCart', language)}
+                    </Button>
+                    
+                    <Button
+                      variant="default"
+                      size="lg"
+                      className="relative bg-red-600 hover:bg-red-700 text-white h-12 w-12 p-0 rounded-full shadow-md"
+                      onClick={() => {
+                        toggleCart('dialog')
+                      }}
+                    >
+                      <ShoppingCart className="h-5 w-5 text-white" />
+                      {getItemCount() > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          {getItemCount()}
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </FontWrapper>
+          </DialogContent>
+        </Dialog>
+      </>
+    )
+  }
 
   return (
     <div className="relative min-h-screen">

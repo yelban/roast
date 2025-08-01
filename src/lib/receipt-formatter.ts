@@ -53,7 +53,7 @@ export function padString(
     }
     
     if (ellipsis && width < currentWidth) {
-      result += '...'
+      result += '... '
     }
     
     return result
@@ -121,7 +121,7 @@ export function formatDivider(char: string = '-', width: number = 48): string {
 /**
  * 格式化右對齊行（用於小計、稅金、總計）
  */
-export function formatRightAlignLine(label: string, value: string, totalWidth: number = 48): string {
+export function formatRightAlignLine(label: string, value: string, totalWidth: number = 46): string {
   const labelWidth = getStringWidth(label)
   const valueWidth = getStringWidth(value)
   const spacesNeeded = totalWidth - labelWidth - valueWidth - 2 // 2 for spacing
@@ -166,11 +166,11 @@ export function generateReceiptContent(data: ReceiptData): string {
     lines.push(`<C>テーブル: ${data.tableNumber}</C>`)
   }
   
-  lines.push('') // 空行
+  // lines.push('') // 空行
   
   // 表頭（手動格式化以確保正確對齊）
   // 品名(4) + 18空白 + 単価(4) + 5空白 + 数量(4) + 1空白 + 金額(4) + 8空白 = 48
-  const header = '品名' + ' '.repeat(18) + '単価' + ' '.repeat(5) + '数量' + ' '.repeat(1) + '金額' + ' '.repeat(8)
+  const header = '品名' + ' '.repeat(22) + '単価' + ' '.repeat(4) + '数量' + ' '.repeat(4) + '金額'
   lines.push(header)
   lines.push(formatDivider())
   
@@ -181,12 +181,12 @@ export function generateReceiptContent(data: ReceiptData): string {
   })
   
   lines.push(formatDivider())
-  lines.push('') // 空行
+  // lines.push('') // 空行
   
   // 金額彙總（右對齊）
-  lines.push(formatRightAlignLine('小計', `¥${formatMoney(data.subtotal)}`))
-  lines.push(formatRightAlignLine('消費税（10%）', `¥${formatMoney(data.tax)}`))
-  lines.push(formatRightAlignLine('合計（税込）', `¥${formatMoney(data.total)}`))
+  lines.push(formatRightAlignLine('小計', `￥${formatMoney(data.subtotal)}`))
+  lines.push(formatRightAlignLine('消費税（10%）', `￥${formatMoney(data.tax)}`))
+  lines.push(formatRightAlignLine('合計（税込）', `￥${formatMoney(data.total)}`))
   
   lines.push('') // 空行
   lines.push(formatRightAlignLine('注文時間', data.orderTime))
