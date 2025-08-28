@@ -60,7 +60,7 @@ export default async function handler(
     
     const storePhone = '03-3897-0416'
 
-     const storeAddress = '東京都足立区鹿浜3-13-4'
+    const storeAddress = '東京都足立区鹿浜3-13-4'
     
     // 準備收據資料（菜名固定使用日文）
     const receiptItems = items.map(item => ({
