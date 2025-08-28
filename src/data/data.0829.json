@@ -14,7 +14,7 @@
           "en": "High-grade Sirloin",
           "ja": "上ロース"
         },
-        "price": 3200
+        "price": 3100
       },
       {
         "name": {
@@ -23,7 +23,7 @@
           "en": "Middle-grade Sirloin",
           "ja": "中ロース"
         },
-        "price": 2300
+        "price": 2200
       },
       {
         "name": {
@@ -32,7 +32,7 @@
           "en": "Choicest Skirt Meat",
           "ja": "特上ハラミ"
         },
-        "price": 2700
+        "price": 2600
       },
       {
         "name": {
@@ -41,7 +41,7 @@
           "en": "High-grade Skirt Meat",
           "ja": "上ハラミ"
         },
-        "price": 2500
+        "price": 2300
       },
       {
         "name": {
@@ -50,25 +50,25 @@
           "en": "Skirt Meat",
           "ja": "並ハラミ"
         },
-        "price": 2300
+        "price": 2100
       },
       {
         "name": {
-          "zh-tw": "牛菲力（数量限定）",
-          "zh-cn": "牛菲力（数量限定）",
-          "en": "Beef Fillet (Quantity Limitation)",
-          "ja": "ヒレ肉（数量限定）"
+          "zh-tw": "上等牛菲力",
+          "zh-cn": "上等牛菲力",
+          "en": "High-grade Beef Fillet (Quantity Limitation)",
+          "ja": "上ヒレ肉"
         },
-        "price": 3200
+        "price": 3100
       },
       {
         "name": {
-          "zh-tw": "牛嫩肩里肌",
-          "zh-cn": "牛嫩肩里肌",
-          "en": "Beef from around the Shoulder",
-          "ja": "ミスジ"
+          "zh-tw": "上等牛嫩肩里肌",
+          "zh-cn": "上等牛嫩肩里肌",
+          "en": "Tender Beef from around the Shoulder",
+          "ja": "上ミスジ"
         },
-        "price": 3200
+        "price": 3100
       },
       {
         "name": {
@@ -77,16 +77,7 @@
           "en": "High-grade Short Ribs",
           "ja": "上カルビ"
         },
-        "price": 3200
-      },
-      {
-        "name": {
-          "zh-tw": "友三角臀肉",
-          "zh-cn": "友三角臀肉",
-          "en": "Tomosankaku",
-          "ja": "トモサンカク"
-        },
-        "price": 3200
+        "price": 3100
       },
       {
         "name": {
@@ -95,7 +86,7 @@
           "en": "High-grade Red Meat",
           "ja": "上赤身"
         },
-        "price": 2100
+        "price": 2000
       },
       {
         "name": {
@@ -104,25 +95,25 @@
           "en": "Red Meat",
           "ja": "並赤身"
         },
-        "price": 1800
+        "price": 1700
       },
       {
         "name": {
           "zh-tw": "中等牛邊角肉",
           "zh-cn": "中等牛边角肉",
           "en": "Middle-grade Cut Off Meat",
-          "ja": "中カルビ切り落とし"
+          "ja": "中切り落とし"
         },
-        "price": 2300
+        "price": 2200
       },
       {
         "name": {
           "zh-tw": "牛邊角肉",
           "zh-cn": "牛边角肉",
           "en": "Cut Off Meat",
-          "ja": "カルビ切り落とし"
+          "ja": "並切り落とし"
         },
-        "price": 1800
+        "price": 1700
       },
       {
         "name": {
@@ -131,7 +122,25 @@
           "en": "Bone-in Beef Short Ribs",
           "ja": "骨付きカルビ"
         },
-        "price": 2200
+        "price": 2100
+      },
+      {
+        "name": {
+          "zh-tw": "特選牛里肌（沙朗）",
+          "zh-cn": "特选牛里肌（沙朗）",
+          "en": "Special Sirloin",
+          "ja": "特撰上ロース"
+        },
+        "price": 8900
+      },
+      {
+        "name": {
+          "zh-tw": "特選牛五花",
+          "zh-cn": "特选牛五花",
+          "en": "Special Ribs",
+          "ja": "特撰上カルビ"
+        },
+        "price": 1500
       }
     ]
   },
@@ -150,7 +159,7 @@
           "en": "High-grade Beef Tripe",
           "ja": "上ミノ"
         },
-        "price": 1800
+        "price": 1700
       },
       {
         "name": {
@@ -159,7 +168,7 @@
           "en": "Beef Tripe",
           "ja": "並ミノ"
         },
-        "price": 1500
+        "price": 1400
       },
       {
         "name": {
@@ -168,7 +177,7 @@
           "en": "High-grade Beef Tongue",
           "ja": "上タン"
         },
-        "price": 2800
+        "price": 2700
       },
       {
         "name": {
@@ -177,7 +186,7 @@
           "en": "Beef Tongue",
           "ja": "並タン"
         },
-        "price": 1800
+        "price": 1550
       },
       {
         "name": {
@@ -186,7 +195,7 @@
           "en": "Assortment of Variety Meats",
           "ja": "ミックスホルモン"
         },
-        "price": 2700
+        "price": 2550
       },
       {
         "name": {
@@ -195,7 +204,7 @@
           "en": "Beef Reed Tripe",
           "ja": "ギアラ"
         },
-        "price": 1700
+        "price": 1550
       },
       {
         "name": {
@@ -204,7 +213,7 @@
           "en": "Offal Foods",
           "ja": "ホルモン"
         },
-        "price": 1700
+        "price": 1550
       },
       {
         "name": {
@@ -213,7 +222,7 @@
           "en": "Beef Heart",
           "ja": "ハツ"
         },
-        "price": 1400
+        "price": 1300
       },
       {
         "name": {
@@ -222,7 +231,7 @@
           "en": "Book Tripe",
           "ja": "センマイ"
         },
-        "price": 1400
+        "price": 1300
       },
       {
         "name": {
@@ -231,7 +240,7 @@
           "en": "Beef Uterus",
           "ja": "子袋"
         },
-        "price": 1400
+        "price": 1300
       },
       {
         "name": {
@@ -240,7 +249,7 @@
           "en": "Sweetbreads",
           "ja": "しびれ塩"
         },
-        "price": 1400
+        "price": 1300
       },
       {
         "name": {
@@ -249,7 +258,7 @@
           "en": "Cartilage",
           "ja": "ナンコツ塩"
         },
-        "price": 1300
+        "price": 1200
       },
       {
         "name": {
@@ -258,7 +267,7 @@
           "en": "Liver",
           "ja": "レバ塩"
         },
-        "price": 1700
+        "price": 1550
       }
     ]
   },
@@ -277,7 +286,7 @@
           "en": "Young Chicken",
           "ja": "ひな鳥"
         },
-        "price": 1300
+        "price": 1200
       },
       {
         "name": {
@@ -286,7 +295,7 @@
           "en": "Squid",
           "ja": "いか焼き"
         },
-        "price": 1300
+        "price": 1200
       },
       {
         "name": {
@@ -296,24 +305,6 @@
           "ja": "豚足"
         },
         "price": 500
-      },
-      {
-        "name": {
-          "zh-tw": "特選牛五花 1枚",
-          "zh-cn": "特选牛五花 1枚",
-          "en": "Special Ribs (1 piece)",
-          "ja": "特撰カルビ 1枚"
-        },
-        "price": 1500
-      },
-      {
-        "name": {
-          "zh-tw": "特選牛里肌（沙朗）",
-          "zh-cn": "特选牛里肌（沙朗）",
-          "en": "Special Sirloin",
-          "ja": "特撰ロース"
-        },
-        "price": 9800
       },
       {
         "name": {
@@ -341,7 +332,7 @@
           "en": "Bamboo Shoots Soup (Spring)",
           "ja": "竹の子スープ（春期）"
         },
-        "price": 700
+        "price": 650
       },
       {
         "name": {
@@ -350,7 +341,7 @@
           "en": "Winter Melon Soup (Summer)",
           "ja": "とうがんスープ（夏期）"
         },
-        "price": 700
+        "price": 650
       },
       {
         "name": {
@@ -359,7 +350,7 @@
           "en": "Daikon Radish Soup (Winter)",
           "ja": "大根スープ（冬期）"
         },
-        "price": 700
+        "price": 650
       }
     ]
   },
@@ -378,16 +369,16 @@
           "en": "Comguk",
           "ja": "コムタン"
         },
-        "price": 1600
+        "price": 1500
       },
       {
         "name": {
           "zh-tw": "牛尾湯飯（半份）",
           "zh-cn": "牛尾汤饭（半份）",
           "en": "Comguk (Half)",
-          "ja": "半コムタン"
+          "ja": "コムタン（半分）"
         },
-        "price": 1250
+        "price": 1050
       },
       {
         "name": {
@@ -396,16 +387,16 @@
           "en": "Galbi Gukbap Korean Rice Soup",
           "ja": "カルビクッパ"
         },
-        "price": 1600
+        "price": 1450
       },
       {
         "name": {
           "zh-tw": "韓式牛五花湯泡飯（半份）",
           "zh-cn": "韩式牛五花汤泡饭（半份）",
           "en": "Galbi Gukbap Korean Rice Soup (Half)",
-          "ja": "半カルビクッパ"
+          "ja": "カルビクッパ（半分）"
         },
-        "price": 1250
+        "price": 1000
       },
       {
         "name": {
@@ -414,16 +405,16 @@
           "en": "Gukbap Korean Rice Soup",
           "ja": "クッパ"
         },
-        "price": 850
+        "price": 750
       },
       {
         "name": {
           "zh-tw": "韓式湯泡飯（半份）",
           "zh-cn": "韩式汤泡饭（半份）",
           "en": "Gukbap Korean Rice Soup (Half)",
-          "ja": "半クッパ"
+          "ja": "クッパ（半分）"
         },
-        "price": 700
+        "price": 650
       },
       {
         "name": {
@@ -432,16 +423,16 @@
           "en": "Gukbap Korean Rice Soup (with Laver)",
           "ja": "のりクッパ"
         },
-        "price": 1000
+        "price": 900
       },
       {
         "name": {
           "zh-tw": "海苔湯泡飯（半份）",
           "zh-cn": "海苔汤泡饭（半份）",
           "en": "Gukbap Korean Rice Soup (with Laver) (Half)",
-          "ja": "半のりクッパ"
+          "ja": "のりクッパ（半分）"
         },
-        "price": 800
+        "price": 700
       },
       {
         "name": {
@@ -450,16 +441,16 @@
           "en": "Gukbap Korean Rice Soup (with Wake seaweed)",
           "ja": "わかめクッパ"
         },
-        "price": 850
+        "price": 800
       },
       {
         "name": {
           "zh-tw": "海帶芽湯泡飯（半份）",
           "zh-cn": "海带芽汤泡饭（半份）",
           "en": "Gukbap Korean Rice Soup (with Wake seaweed) (Half)",
-          "ja": "半わかめクッパ"
+          "ja": "わかめクッパ（半分）"
         },
-        "price": 700
+        "price": 650
       },
       {
         "name": {
@@ -469,17 +460,8 @@
           "ja": "ビビンバ"
         },
         "price": {
-          "normal": 1050
+          "normal": 950
         }
-      },
-      {
-        "name": {
-          "zh-tw": "白飯（大碗）",
-          "zh-cn": "白饭（大碗）",
-          "en": "Rice (Extra-size)",
-          "ja": "大ライス"
-        },
-        "price": 450
       },
       {
         "name": {
@@ -498,7 +480,16 @@
           "ja": "ライス（半分）"
         },
         "price": 350
-      }      
+      },
+      {
+        "name": {
+          "zh-tw": "白飯（大碗）",
+          "zh-cn": "白饭（大碗）",
+          "en": "Rice (Extra-size)",
+          "ja": "大ライス"
+        },
+        "price": 450
+      }
     ]
   },
   "スープ": {
@@ -516,34 +507,7 @@
           "en": "Comguk Soup",
           "ja": "コムタンスープ"
         },
-        "price": 1500
-      },
-      {
-        "name": {
-          "zh-tw": "牛尾湯（半份）",
-          "zh-cn": "牛尾汤（半份）",
-          "en": "Comguk Soup (Half)",
-          "ja": "半コムタンスープ"
-        },
-        "price": 1200
-      },
-      {
-        "name": {
-          "zh-tw": "牛五花湯",
-          "zh-cn": "牛五花汤",
-          "en": "Galbi Soup",
-          "ja": "カルビスープ"
-        },
-        "price": 1500
-      },
-      {
-        "name": {
-          "zh-tw": "牛五花湯（半份）",
-          "zh-cn": "牛五花汤（半份）",
-          "en": "Galbi Soup (Half)",
-          "ja": "半カルビスープ"
-        },
-        "price": 1200
+        "price": 1350
       },
       {
         "name": {
@@ -552,7 +516,7 @@
           "en": "Egg Soup",
           "ja": "玉子スープ"
         },
-        "price": 650
+        "price": 600
       },
       {
         "name": {
@@ -561,7 +525,7 @@
           "en": "Vegetables Soup",
           "ja": "野菜スープ"
         },
-        "price": 650
+        "price": 600
       },
       {
         "name": {
@@ -570,7 +534,7 @@
           "en": "Wakame-seaweed Soup",
           "ja": "わかめスープ"
         },
-        "price": 650
+        "price": 600
       },
       {
         "name": {
@@ -579,7 +543,7 @@
           "en": "Wakame&Egg Soup",
           "ja": "わかめ玉子スープ"
         },
-        "price": 750
+        "price": 600
       },
       {
         "name": {
@@ -588,7 +552,7 @@
           "en": "Beans Sprouts Soup (Piquant)",
           "ja": "もやしスープ（ピリ辛）"
         },
-        "price": 700
+        "price": 650
       },
       {
         "name": {
@@ -597,7 +561,7 @@
           "en": "Cheek Meat Soup (Consomme)",
           "ja": "ほほ肉スープ（コンソメ味）"
         },
-        "price": 800
+        "price": 750
       }
     ]
   },
@@ -616,7 +580,7 @@
           "zh-cn": "韩式泡菜",
           "ja": "キムチ"
         },
-        "price": 700
+        "price": 650
       },
       {
         "name": {
@@ -625,79 +589,16 @@
           "zh-cn": "小黄瓜泡菜",
           "ja": "オイキムチ"
         },
-        "price": 600
-      },
-      {
-        "name": {
-          "en": "Korean Radish Kimchi",
-          "zh-tw": "韓式蘿蔔泡菜",
-          "zh-cn": "韩式萝卜泡菜",
-          "ja": "カクテキ"
-        },
-        "price": 700
-      },
-      {
-        "name": {
-          "en": "Korean Bean Sprout Salad",
-          "zh-tw": "韓式涼拌豆芽",
-          "zh-cn": "韩式凉拌豆芽",
-          "ja": "もやし"
-        },
-        "price": 400
-      },
-      {
-        "name": {
-          "en": "Korean Seasoned Vegetables",
-          "zh-tw": "韓式涼拌菜",
-          "zh-cn": "韩式凉拌菜",
-          "ja": "ナムル"
-        },
-        "price": 400
-      },
-      {
-        "name": {
-          "en": "Potato Salad",
-          "zh-tw": "馬鈴薯沙拉",
-          "zh-cn": "土豆沙拉",
-          "ja": "ポテトサラダ"
-        },
-        "price": 600
-      },
-      {
-        "name": {
-          "en": "Korean Lettuce",
-          "zh-tw": "韓式生菜",
-          "zh-cn": "韩式生菜",
-          "ja": "サンチュ"
-        },
-        "price": 650
-      },
-      {
-        "name": {
-          "en": "Boiled Egg",
-          "zh-tw": "味付玉子",
-          "zh-cn": "味付玉子",
-          "ja": "味付玉子"
-        },
-        "price": 200
-      },
-      {
-        "name": {
-          "en": "Chicken Heart Sashimi (One Person)",
-          "zh-tw": "雞心刺身（一人份）",
-          "zh-cn": "鸡心刺身（一人份）",
-          "ja": "ハツのタタキ（一人前）"
-        },
-        "price": 250
+        "price": 550
       }
     ]
   },
-  "搭配啤酒": {
+  "煮物料理": {
     "name": {
-      "en": "With Beer",
-      "zh-tw": "搭配啤酒",
-      "zh-cn": "搭配啤酒",
-      "ja": "ビールとご一緒に"
+      "en": "Simmered Food",
+      "zh-tw": "燉煮料理",
+      "zh-cn": "炖煮料理",
+      "ja": "煮物料理"
     },
     "items": [
       {
@@ -707,7 +608,7 @@
           "zh-cn": "味噌牛杂煮",
           "ja": "牛もつ味噌煮込み"
         },
-        "price": 1300
+        "price": 1200
       },
       {
         "name": {
@@ -716,7 +617,7 @@
           "zh-cn": "盐味牛杂煮",
           "ja": "牛もつ塩煮込み"
         },
-        "price": 1300
+        "price": 1200
       }
     ]
   },
@@ -735,7 +636,7 @@
           "zh-cn": "杏仁豆腐",
           "ja": "杏仁豆腐"
         },
-        "price": 500
+        "price": 450
       },
       {
         "name": {
@@ -744,7 +645,7 @@
           "zh-cn": "黑豆杏仁豆腐",
           "ja": "黑豆杏仁豆腐"
         },
-        "price": 650
+        "price": 600
       }
     ]
   },
@@ -763,7 +664,7 @@
           "zh-cn": "手工冷冻饺子（10个）",
           "ja": "手作り冷凍餃子（10個）"
         },
-        "price": 650
+        "price": 600
       },
       {
         "name": {
@@ -772,7 +673,7 @@
           "zh-cn": "牛筋咖喱",
           "ja": "牛スジカレー"
         },
-        "price": 1050
+        "price": 1000
       },
       {
         "name": {
@@ -781,7 +682,7 @@
           "zh-cn": "卤肉饭",
           "ja": "魯肉飯"
         },
-        "price": 750
+        "price": 700
       }
     ]
   }
