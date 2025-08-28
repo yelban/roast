@@ -16,8 +16,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     if (ifNoneMatch === `"${menuHash}"`) {
       // 如果客戶端已有最新版本，返回 304
-      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400')
-      res.setHeader('CF-Cache-Control', 'max-age=3600, stale-while-revalidate=86400')
+      res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
+      res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
       res.setHeader('ETag', `"${menuHash}"`)
       res.status(304).end()
       return
@@ -25,8 +25,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // 設置快取相關標頭
     res.setHeader('Content-Type', 'application/json')
-    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400')
-    res.setHeader('CF-Cache-Control', 'max-age=3600, stale-while-revalidate=86400')
+    res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, stale-while-revalidate=86400, immutable')
+    res.setHeader('CF-Cache-Control', 'max-age=31536000, stale-while-revalidate=86400')
     res.setHeader('ETag', `"${menuHash}"`)
     res.setHeader('Last-Modified', new Date().toUTCString())
     res.setHeader('Vary', 'Accept')
