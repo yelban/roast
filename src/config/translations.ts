@@ -43,16 +43,16 @@ export const translations: {
     'ja': '小計'
   },
   tax: {
-    'zh-tw': '消費税（10%）',
-    'zh-cn': '消费税（10%）',
-    'en': 'Tax (10%)',
-    'ja': '消費税（10%）'
+    'zh-tw': '內消費税（10%）',
+    'zh-cn': '内消费税（10%）',
+    'en': 'Tax included (10%)',
+    'ja': '內消費税（10%）'
   },
   total: {
-    'zh-tw': '合計（税込）',
-    'zh-cn': '合计（含税）',
-    'en': 'Total (Tax incl.)',
-    'ja': '合計（税込）'
+    'zh-tw': '合計',
+    'zh-cn': '合计',
+    'en': 'Total',
+    'ja': '合計'
   },
   addedToCart: {
     'zh-tw': '已加入購物車',

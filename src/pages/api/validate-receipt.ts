@@ -17,8 +17,8 @@ export default function handler(
       { name: '特選和牛サーロインステーキ', price: 12500, quantity: 2 },
     ],
     subtotal: 28100,
-    tax: 2810,
-    total: 30910,
+    tax: 2554,
+    total: 28100,
     orderTime: '2024-01-20 18:30:45'
   }
   

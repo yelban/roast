@@ -192,8 +192,8 @@ export function generateReceiptContent(data: ReceiptData): string {
   
   // 金額彙總（右對齊）
   lines.push(formatRightAlignLine('小計', `￥${formatMoney(data.subtotal)}`))
-  lines.push(formatRightAlignLine('消費税（10%）', `￥${formatMoney(data.tax)}`))
-  lines.push(formatRightAlignLine('合計（税込）', `￥${formatMoney(data.total)}`))
+  lines.push(formatRightAlignLine('內消費税（10%）', `￥${formatMoney(data.tax)}`))
+  lines.push(formatRightAlignLine('合計', `￥${formatMoney(data.total)}`))
   
   lines.push('') // 空行
   lines.push(formatRightAlignLine('受付時間', data.orderTime))

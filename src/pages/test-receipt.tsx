@@ -18,8 +18,8 @@ export default function TestReceipt() {
       { name: '韓国風チヂミ', price: 980, quantity: 3 },
     ],
     subtotal: 17610,
-    tax: 1761,
-    total: 19371,
+    tax: 1600,
+    total: 17610,
     orderTime: '2024-01-20 18:30:45'
   }
   

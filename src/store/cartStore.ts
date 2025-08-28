@@ -79,9 +79,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   getTotalWithTax: (taxRate = 0.1) => {
-    const subtotal = get().getTotalPrice()
-    const tax = Math.floor(subtotal * taxRate)
-    const total = subtotal + tax
+    const total = get().getTotalPrice() // 商品價格已含稅
+    const subtotal = total // 小計就是總價（已含稅）
+    const tax = Math.floor(total * taxRate / (1 + taxRate)) // 計算內含的稅額
     return { subtotal, tax, total }
   },
 
