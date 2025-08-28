@@ -1,6 +1,6 @@
 {
   "name": "roast",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000 --hostname 0.0.0.0",
@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start --port 3000 --hostname 0.0.0.0",
     "lint": "next lint",
-    "generate-subsets": "tsx scripts/generate-font-subsets.ts"
+    "generate-subsets": "tsx scripts/generate-font-subsets.ts",
+    "check-version": "node scripts/check-version.js",
+    "smart-commit": "node scripts/smart-commit.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.844.0",
