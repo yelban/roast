@@ -22,6 +22,7 @@ import { useCartStore } from '@/store/cartStore'
 import { t } from '@/config/translations'
 import TableSelector from '@/components/TableSelector'
 import TableSelectorDialog from '@/components/TableSelectorDialog'
+import { toast } from 'sonner'
 
 // 日文數字映射
 const japaneseNumbers: { [key: number]: string } = {
@@ -1373,9 +1374,10 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                       })
                       
                       setIsDialogOpen(false)
-                      setTimeout(() => {
-                        alert(`${t('addedToCart', language)}：${selectedItem.name[language]} x ${quantity}`)
-                      }, 100)
+                      toast.success(`${t('addedToCart', language)}：${selectedItem.name[language]} x ${quantity}`, {
+                        duration: 2000,
+                        position: 'top-center'
+                      })
                     }}
                   >
                     <ShoppingCart className="mr-2 h-5 w-5" />
