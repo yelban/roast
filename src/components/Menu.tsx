@@ -983,40 +983,6 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                     <div className="text-lg text-red-900 font-bold text-center">
                       {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
                     </div>
-                    <div className="flex flex-col items-center gap-4">
-                      {/* 原有的語音播放按鈕 */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled={isTTSLoading || isPlaying || isQuantityTTSLoading}
-                        className={`h-8 w-8 pt-2 inline-flex items-center justify-center hover:bg-gray-200 relative
-                          focus-visible:ring-0 focus-visible:ring-offset-0
-                          ${isTTSLoading ? 'animate-pulse' : ''}
-                          ${isPlaying ? 'text-blue-600' : 'text-gray-600'}
-                        `}
-                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                          e.stopPropagation()
-                          if (selectedItem?.name?.['ja']) {
-                            playTTS(selectedItem.name['ja'])
-                          }
-                        }}
-                      >
-                        {isTTSLoading ? (
-                          <div className="h-5 w-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <>
-                            <Volume2 className="h-5 w-5 fill-current" />
-                            {isPlaying && (
-                              <div className="absolute -right-[6px] flex items-center gap-[2px]">
-                                <div className="w-[2px] h-[8px] bg-blue-600 animate-sound-wave-1" />
-                                <div className="w-[2px] h-[12px] bg-blue-600 animate-sound-wave-2" />
-                                <div className="w-[2px] h-[16px] bg-blue-600 animate-sound-wave-3" />
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </Button>
-                    </div>
                   </div>
                 </DialogTitle>
                 <DialogDescription className="sr-only">商品詳細資訊</DialogDescription>
@@ -1081,37 +1047,6 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                         <Plus className="h-6 w-6 stroke-2" />
                       </Button>
                     </div>
-                    
-                    {/* 連續語音播放按鈕 */}
-                    <div className="mt-4 flex justify-center">
-                      <Button
-                        variant="default"
-                        className={`px-6 py-3 text-base bg-red-900 hover:bg-red-800 text-white rounded-lg
-                          focus-visible:ring-0 focus-visible:ring-offset-0
-                          ${isQuantityTTSLoading ? 'animate-pulse' : ''}
-                          disabled:opacity-50
-                        `}
-                        disabled={isTTSLoading || isPlaying || isQuantityTTSLoading}
-                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                          e.stopPropagation()
-                          if (selectedItem?.name?.['ja']) {
-                            playItemWithQuantity(selectedItem.name['ja'], quantity)
-                          }
-                        }}
-                      >
-                        {isQuantityTTSLoading ? (
-                          <div className="flex items-center gap-2">
-                            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>播放中...</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <Volume2 className="h-5 w-5" />
-                            <span>播放 {japaneseNumbers[quantity]}</span>
-                          </div>
-                        )}
-                      </Button>
-                    </div>
                   </div>
                   
                   {/* 價格顯示 */}
@@ -1136,23 +1071,6 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                       </div>
                     </div>
                   )}
-                  <div className="pt-2 border-t">
-                    <div className="font-semibold text-gray-600 mb-2">その他の言語</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <span className="block text-xs text-gray-500 mb-1">台湾語</span>
-                        <div className="text-gray-900 text-lg">{selectedItem.name['zh-tw']}</div>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <span className="block text-xs text-gray-500 mb-1">中国語</span>
-                        <div className="text-gray-900 text-lg">{selectedItem.name['zh-cn']}</div>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-lg md:col-span-2">
-                        <span className="block text-xs text-gray-500 mb-1">English</span>
-                        <div className="text-gray-900 text-lg">{selectedItem.name.en}</div>
-                      </div>
-                    </div>
-                  </div>
                   
                   {/* 購物車按鈕區域 */}
                   <div className="pt-3 mt-3 border-t flex justify-between items-center">
