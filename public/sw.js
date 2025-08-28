@@ -39,13 +39,26 @@ if (workbox) {
   // API 路由快取
   workbox.routing.registerRoute(
     ({ url }) => url.pathname.startsWith('/api/menu'),
-    new workbox.strategies.StaleWhileRevalidate({
+    new workbox.strategies.NetworkFirst({
       cacheName: 'api-menu',
+      networkTimeoutSeconds: 3,
       plugins: [
         new workbox.expiration.ExpirationPlugin({
-          maxEntries: 1,
-          maxAgeSeconds: 24 * 60 * 60
-        })
+          maxEntries: 5,
+          maxAgeSeconds: 6 * 60 * 60, // 6小時
+          purgeOnQuotaError: true
+        }),
+        // 自定義快取鍵策略，包含版本參數
+        {
+          cacheKeyWillBeUsed: async ({ request }) => {
+            const url = new URL(request.url)
+            // 如果沒有版本參數，使用當前時間戳作為版本
+            if (!url.searchParams.has('v')) {
+              url.searchParams.set('v', Date.now().toString())
+            }
+            return url.toString()
+          }
+        }
       ]
     })
   );
