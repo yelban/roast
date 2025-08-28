@@ -147,6 +147,9 @@ export interface ReceiptItem {
 
 export interface ReceiptData {
   storeName: string
+  storeZone: string
+  storePhone: string
+  storeAddress: string
   tableNumber?: string
   items: ReceiptItem[]
   subtotal: number
@@ -160,10 +163,14 @@ export function generateReceiptContent(data: ReceiptData): string {
   
   // 店名（置中放大）
   lines.push(`<CB>${data.storeName}</CB>`)
+
+  lines.push(`<C>${data.storeZone} ${data.storeAddress}`)
+
+  lines.push(`電話：${data.storePhone}</C>`)
   
   // 桌號（如果有）
   if (data.tableNumber) {
-    lines.push(`<C>テーブル: ${data.tableNumber}</C>`)
+    lines.push(`テーブル: ${data.tableNumber}`)
   }
   
   // lines.push('') // 空行
@@ -189,7 +196,7 @@ export function generateReceiptContent(data: ReceiptData): string {
   lines.push(formatRightAlignLine('合計（税込）', `￥${formatMoney(data.total)}`))
   
   lines.push('') // 空行
-  lines.push(formatRightAlignLine('注文時間', data.orderTime))
+  lines.push(formatRightAlignLine('受付時間', data.orderTime))
   
   return lines.join('\n')
 }

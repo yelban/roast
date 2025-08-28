@@ -1,4 +1,4 @@
-import { useEffect, useState, TouchEvent } from 'react'
+import React, { useEffect, useState, TouchEvent } from 'react'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -20,6 +20,8 @@ import { recordCacheUsage } from '@/lib/cacheMetrics'
 import { StreamingAudioPlayer } from '@/lib/audioStreaming'
 import { useCartStore } from '@/store/cartStore'
 import { t } from '@/config/translations'
+import TableSelector from '@/components/TableSelector'
+import TableSelectorDialog from '@/components/TableSelectorDialog'
 
 // 日文數字映射
 const japaneseNumbers: { [key: number]: string } = {
@@ -34,6 +36,91 @@ const japaneseNumbers: { [key: number]: string } = {
   9: '九つ'
 }
 
+// 分類顏色映射
+const categoryColors: { [key: string]: { 
+  bg: string; 
+  border: string; 
+  text: string; 
+  hover: string;
+  light: string;
+} } = {
+  '焼肉': {
+    bg: 'bg-red-100',
+    border: 'border-red-600',
+    text: 'text-red-600',
+    hover: 'hover:border-red-700',
+    light: 'hover:bg-red-50'
+  },
+  'ホルモン': {
+    bg: 'bg-orange-100',
+    border: 'border-orange-600',
+    text: 'text-orange-600',
+    hover: 'hover:border-orange-700',
+    light: 'hover:bg-orange-50'
+  },
+  'その他': {
+    bg: 'bg-blue-100',
+    border: 'border-blue-600',
+    text: 'text-blue-600',
+    hover: 'hover:border-blue-700',
+    light: 'hover:bg-blue-50'
+  },
+  '季節限定スープ': {
+    bg: 'bg-purple-100',
+    border: 'border-purple-600',
+    text: 'text-purple-600',
+    hover: 'hover:border-purple-700',
+    light: 'hover:bg-purple-50'
+  },
+  'ご飯': {
+    bg: 'bg-yellow-100',
+    border: 'border-yellow-600',
+    text: 'text-yellow-700',
+    hover: 'hover:border-yellow-700',
+    light: 'hover:bg-yellow-50'
+  },
+  'スープ': {
+    bg: 'bg-teal-100',
+    border: 'border-teal-600',
+    text: 'text-teal-600',
+    hover: 'hover:border-teal-700',
+    light: 'hover:bg-teal-50'
+  },
+  '漬物＆サラダ': {
+    bg: 'bg-green-100',
+    border: 'border-green-600',
+    text: 'text-green-600',
+    hover: 'hover:border-green-700',
+    light: 'hover:bg-green-50'
+  },
+  '煮物料理': {
+    bg: 'bg-amber-100',
+    border: 'border-amber-600',
+    text: 'text-amber-700',
+    hover: 'hover:border-amber-700',
+    light: 'hover:bg-amber-50'
+  },
+  'デザート': {
+    bg: 'bg-pink-100',
+    border: 'border-pink-600',
+    text: 'text-pink-600',
+    hover: 'hover:border-pink-700',
+    light: 'hover:bg-pink-50'
+  },
+  'お土産': {
+    bg: 'bg-gray-100',
+    border: 'border-gray-600',
+    text: 'text-gray-600',
+    hover: 'hover:border-gray-700',
+    light: 'hover:bg-gray-50'
+  }
+}
+
+// 獲取分類顏色的函數
+const getCategoryColor = (categoryId: string) => {
+  return categoryColors[categoryId] || categoryColors['その他']
+}
+
 interface SelectedItem extends MenuItem {
   categoryName: {
     [key in Language]: string
@@ -46,7 +133,7 @@ interface MenuProps {
 
 export default function Menu({ mode = 'customer' }: MenuProps) {
   const { language, setLanguage, slideDirection, setSlideDirection, nextLanguage, setNextLanguage } = useLanguageStore()
-  const { addItem, getItemCount, toggleCart, items } = useCartStore()
+  const { addItem, getItemCount, toggleCart, items, tableNumber } = useCartStore()
   const [menuData, setMenuData] = useState<MenuData | null>(null)
   const [isMenuLoading, setIsMenuLoading] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -61,6 +148,8 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
   const [preloadedQuantityAudios, setPreloadedQuantityAudios] = useState<{ [key: number]: string }>({})
   const [isPreloading, setIsPreloading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [showTableSelector, setShowTableSelector] = useState(mode === 'pos' && !tableNumber)
+  const [showTableSelectorDialog, setShowTableSelectorDialog] = useState(false)
 
   // 音效功能
   const playButtonSound = (type: 'plus' | 'minus' | 'boundary') => {
@@ -295,7 +384,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
     return cartItem ? cartItem.quantity : 0
   }
 
-  const formatPrice = (price: number | { normal?: number; half?: number } | string): JSX.Element => {
+  const formatPrice = (price: number | { normal?: number; half?: number } | string): React.JSX.Element => {
     if (typeof price === 'number') {
       return (
         <span>
@@ -689,80 +778,99 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
         {/* 左側類別導航 */}
         <div className="w-48 bg-white shadow-lg fixed left-0 top-[72px] bottom-0 overflow-y-auto z-40 border-t border-gray-200">
           <nav className="py-2">
-            {Object.entries(menuData || {}).map(([categoryId, categoryData]) => (
-              <button
-                key={categoryId}
-                onClick={() => setSelectedCategory(categoryId)}
-                className={`w-full px-4 py-3 text-left transition-colors ${
-                  selectedCategory === categoryId
-                    ? 'bg-red-100 text-red-600 border-l-4 border-red-600'
-                    : 'hover:bg-gray-100 text-gray-900'
-                }`}
-              >
-                <div className="font-medium">{categoryData.name[language]}</div>
-                <div className={`text-sm ${selectedCategory === categoryId ? 'text-red-500' : 'text-gray-500'}`}>
-                  {categoryData.items.length} 品項
-                </div>
-              </button>
-            ))}
+            {Object.entries(menuData || {}).map(([categoryId, categoryData]) => {
+              const colors = getCategoryColor(categoryId)
+              return (
+                <button
+                  key={categoryId}
+                  onClick={() => setSelectedCategory(categoryId)}
+                  className={`w-full px-4 py-3 text-left transition-colors ${
+                    selectedCategory === categoryId
+                      ? `${colors.bg} ${colors.text} border-l-4 ${colors.border}`
+                      : 'hover:bg-gray-100 text-gray-900'
+                  }`}
+                >
+                  <div className="font-medium">{categoryData.name[language]}</div>
+                  <div className={`text-sm ${selectedCategory === categoryId ? colors.text : 'text-gray-500'}`}>
+                    {categoryData.items.length} 品項
+                  </div>
+                </button>
+              )
+            })}
           </nav>
         </div>
 
         {/* 右側商品網格 */}
         <div className="ml-48 flex-1 p-6">
           {/* 頂部工具列 */}
-          <div className="bg-white rounded-lg shadow p-4 mb-6 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-800">
-              {currentCategoryItems?.name[language]}
-            </h2>
+          <div className="space-y-4 mb-6">
+            {/* 桌號顯示 */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-red-50 px-4 py-2 rounded-lg border border-red-200">
+                    <span className="text-sm text-gray-700">
+                      {language === 'ja' ? 'テーブル' : language === 'zh-tw' ? '桌號' : language === 'zh-cn' ? '桌号' : 'Table'}
+                    </span>
+                    <span className="ml-2 font-bold text-xl text-red-600">{tableNumber}</span>
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowTableSelectorDialog(true)}
+                    className="border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 hover:text-gray-900 font-medium transition-all"
+                  >
+                    {language === 'ja' ? '変更' : language === 'zh-tw' ? '變更' : language === 'zh-cn' ? '变更' : 'Change'}
+                  </Button>
+                </div>
+                
+                {/* 購物車按鈕 */}
+                <Button
+                  onClick={() => toggleCart('menu')}
+                  className="relative bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  {t('cart', language)}
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-yellow-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Button>
+              </div>
+            </div>
             
-            {/* 購物車按鈕 */}
-            <Button
-              onClick={() => toggleCart('menu')}
-              className="relative bg-red-600 hover:bg-red-700 text-white"
-            >
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              {t('cart', language)}
-              {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-yellow-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold">
-                  {cartItemCount}
-                </span>
-              )}
-            </Button>
           </div>
 
           {/* 商品網格 */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
             {currentCategoryItems?.items.map((item, index) => {
               const cartQuantity = getItemInCart(item)
+              const colors = getCategoryColor(selectedCategory)
               return (
                 <button
                   key={index}
                   onClick={() => handleItemClick(item, currentCategoryItems.name)}
-                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 p-5 text-left group relative border-2 border-transparent hover:border-red-200"
+                  className={`bg-white rounded-lg shadow hover:shadow-md transition-all duration-200 p-3 text-left group relative border border-gray-200 border-l-4 ${colors.border} ${colors.hover} ${colors.light}`}
                 >
                   {cartQuantity > 0 && (
-                    <span className="absolute -top-3 -right-3 bg-red-600 text-white rounded-full h-7 w-7 flex items-center justify-center text-sm font-bold z-10 shadow-md">
+                    <span className={`absolute -top-2 -right-2 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold z-10 shadow-md ${colors.border.replace('border-', 'bg-')}`}>
                       {cartQuantity}
                     </span>
                   )}
                   
-                  {/* 簡化的圖片區域 */}
-                  <div className="w-full h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-4 flex items-center justify-center border border-gray-300">
-                    <div className="text-2xl text-gray-400">🍽️</div>
-                  </div>
-                  
-                  {/* 文字內容區域 */}
-                  <div className="space-y-3">
-                    <h3 className="font-bold text-lg text-gray-800 group-hover:text-red-600 transition-colors duration-200 leading-tight min-h-[2.5rem] flex items-center">
+                  {/* 簡潔的菜品內容 */}
+                  <div className="space-y-2">
+                    <h3 className={`font-bold text-lg leading-tight text-gray-800 group-hover:${colors.text} transition-colors duration-200 min-h-[2.5rem] flex items-center`}>
                       {item.name[language]}
                     </h3>
                     <div className="flex items-center justify-between">
-                      <p className="text-xl font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full">
+                      <p className={`text-xl font-bold ${colors.text}`}>
                         {formatPOSPrice(item.price)}
                       </p>
-                      <div className="text-gray-400 group-hover:text-red-500 transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className={`text-gray-400 group-hover:${colors.text} transition-colors`}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
@@ -833,11 +941,27 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
   )
 
   if (mode === 'pos') {
+    if (showTableSelector && !tableNumber) {
+      return (
+        <TableSelector 
+          onTableSelected={(table) => {
+            setShowTableSelector(false)
+          }}
+        />
+      )
+    }
+    
     return (
       <>
         <div className="relative min-h-screen">
           {renderPOSContent()}
         </div>
+        
+        {/* 桌號選擇對話框 */}
+        <TableSelectorDialog
+          isOpen={showTableSelectorDialog}
+          onClose={() => setShowTableSelectorDialog(false)}
+        />
         
         {/* 商品詳情對話框 - 與正常模式完全一致 */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

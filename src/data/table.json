@@ -1,0 +1,39 @@
+{
+  "sections": [
+    {
+      "zone": "A",
+      "tables": [
+        { "number": "A1", "seats": 4 },
+        { "number": "A2", "seats": 4 },
+        { "number": "A3", "seats": 4 },
+        { "number": "A4", "seats": 4 },
+        { "number": "A5", "seats": 4 },
+        { "number": "A6", "seats": 4 },
+        { "number": "A7", "seats": 4 },
+        { "number": "A8", "seats": 4 },
+        { "number": "A9", "seats": 4 }
+      ]
+    },
+    {
+      "zone": "B",
+      "tables": [
+        { "number": "B1", "seats": 6 },
+        { "number": "B2", "seats": 6 },
+        { "number": "B3", "seats": 6 },
+        { "number": "B4", "seats": 6 },
+        { "number": "B5", "seats": 6 },
+        { "number": "B6", "seats": 6 }
+      ]
+    },
+    {
+      "zone": "C",
+      "tables": [
+        { "number": "C1", "seats": 2 },
+        { "number": "C2", "seats": 2 },
+        { "number": "C3", "seats": 2 },
+        { "number": "C4", "seats": 2 },
+        { "number": "C5", "seats": 2 }
+      ]
+    }
+  ]
+}
