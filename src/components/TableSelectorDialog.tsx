@@ -16,30 +16,38 @@ const translations = {
   ja: {
     title: 'テーブル番号を変更',
     subtitle: '新しいテーブル番号を選択してください',
+    currentTable: '現在のテーブル',
     seats: '席',
     zone: 'エリア',
-    cancel: 'キャンセル'
+    cancel: 'キャンセル',
+    current: '現在'
   },
   'zh-tw': {
     title: '變更桌號',
     subtitle: '請選擇新的桌號',
+    currentTable: '目前桌號',
     seats: '座位',
     zone: '區域',
-    cancel: '取消'
+    cancel: '取消',
+    current: '目前'
   },
   'zh-cn': {
     title: '变更桌号',
     subtitle: '请选择新的桌号',
+    currentTable: '当前桌号',
     seats: '座位',
     zone: '区域',
-    cancel: '取消'
+    cancel: '取消',
+    current: '当前'
   },
   en: {
     title: 'Change Table Number',
     subtitle: 'Please select a new table number',
+    currentTable: 'Current Table',
     seats: 'seats',
     zone: 'Zone',
-    cancel: 'Cancel'
+    cancel: 'Cancel',
+    current: 'Current'
   }
 }
 
@@ -95,6 +103,14 @@ export default function TableSelectorDialog({ isOpen, onClose, onTableSelected }
         <DialogHeader className="relative">
           <DialogTitle className="text-3xl font-bold text-gray-900 pr-12">{t.title}</DialogTitle>
           <p className="text-lg text-gray-700 mt-2 pr-12">{t.subtitle}</p>
+          {currentTableNumber && (
+            <div className="mt-4 pr-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg">
+                <span className="text-sm text-red-700 font-medium">{t.currentTable}:</span>
+                <span className="text-lg font-bold text-red-800">{currentTableNumber}</span>
+              </div>
+            </div>
+          )}
           <Button
             variant="outline"
             size="icon"
@@ -118,30 +134,41 @@ export default function TableSelectorDialog({ isOpen, onClose, onTableSelected }
               </div>
               
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {section.tables.map((table) => (
-                  <Button
-                    key={table.number}
-                    onClick={() => handleTableSelect(table.number)}
-                    variant={selectedTable === table.number ? "default" : "outline"}
-                    className={`h-16 text-lg font-bold relative transition-all ${
-                      selectedTable === table.number 
-                        ? getZoneColor(section.zone)
-                        : `bg-white border-2 ${getZoneBorderColor(section.zone)}`
-                    }`}
-                  >
-                    <div className="flex flex-col items-center gap-1">
-                      <span className={`text-xl ${
-                        selectedTable === table.number ? '' : 'font-semibold'
-                      }`}>{table.number}</span>
-                      <div className={`flex items-center gap-1 text-xs ${
-                        selectedTable === table.number ? 'opacity-90' : 'opacity-80'
-                      }`}>
-                        <Users className="h-3 w-3" />
-                        <span>{table.seats}</span>
+                {section.tables.map((table) => {
+                  const isCurrentTable = currentTableNumber === table.number
+                  const isSelected = selectedTable === table.number
+                  return (
+                    <Button
+                      key={table.number}
+                      onClick={() => handleTableSelect(table.number)}
+                      variant={isSelected ? "default" : "outline"}
+                      className={`h-16 text-lg font-bold relative transition-all ${
+                        isSelected
+                          ? getZoneColor(section.zone)
+                          : `bg-white border-2 ${getZoneBorderColor(section.zone)} ${
+                              isCurrentTable ? 'ring-2 ring-red-400 ring-offset-2' : ''
+                            }`
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <span className={`text-xl ${
+                          isSelected ? '' : 'font-semibold'
+                        }`}>{table.number}</span>
+                        <div className={`flex items-center gap-1 text-xs ${
+                          isSelected ? 'opacity-90' : 'opacity-80'
+                        }`}>
+                          <Users className="h-3 w-3" />
+                          <span>{table.seats}</span>
+                        </div>
+                        {isCurrentTable && !isSelected && (
+                          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md">
+                            {t.current}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </Button>
-                ))}
+                    </Button>
+                  )
+                })}
               </div>
             </div>
           ))}
