@@ -114,6 +114,34 @@ const categoryColors: { [key: string]: {
     text: 'text-gray-600',
     hover: 'hover:border-gray-700',
     light: 'hover:bg-gray-50'
+  },
+  'ビール': {
+    bg: 'bg-amber-100',
+    border: 'border-amber-600',
+    text: 'text-amber-700',
+    hover: 'hover:border-amber-700',
+    light: 'hover:bg-amber-50'
+  },
+  '軟性飲料': {
+    bg: 'bg-cyan-100',
+    border: 'border-cyan-600',
+    text: 'text-cyan-700',
+    hover: 'hover:border-cyan-700',
+    light: 'hover:bg-cyan-50'
+  },
+  '日本酒&果実酒': {
+    bg: 'bg-indigo-100',
+    border: 'border-indigo-600',
+    text: 'text-indigo-600',
+    hover: 'hover:border-indigo-700',
+    light: 'hover:bg-indigo-50'
+  },
+  '焼酎': {
+    bg: 'bg-slate-100',
+    border: 'border-slate-600',
+    text: 'text-slate-700',
+    hover: 'hover:border-slate-700',
+    light: 'hover:bg-slate-50'
   }
 }
 
@@ -858,7 +886,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                   className={`bg-white rounded-lg shadow hover:shadow-md transition-all duration-200 p-3 text-left group relative border border-gray-200 border-l-4 ${colors.border} ${colors.hover} ${colors.light}`}
                 >
                   {cartQuantity > 0 && (
-                    <span className={`absolute -top-2 -right-2 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold z-10 shadow-md ${colors.border.replace('border-', 'bg-')}`}>
+                    <span className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold z-10 shadow-md">
                       {cartQuantity}
                     </span>
                   )}

@@ -782,6 +782,505 @@
           "ja": "魯肉飯"
         },
         "price": 750
+      },
+      {
+        "name": {
+          "en": "Braised Pork Rice With Marinated Soft-Boiled Egg",
+          "zh-tw": "滷肉飯加醃製水煮蛋",
+          "zh-cn": "卤肉饭加腌制的煮鸡蛋",
+          "ja": "魯肉飯プラス味玉付"
+        },
+        "price": 850
+      }
+    ]
+  },
+  "ビール": {
+    "name": {
+      "en": "Beer",
+      "zh-tw": "啤酒",
+      "zh-cn": "啤酒",
+      "ja": "ビール"
+    },
+    "items": [
+      {
+        "name": {
+          "en": "Asahi Premium Beer",
+          "zh-tw": "朝日啤酒",
+          "zh-cn": "朝日啤酒",
+          "ja": "アサヒプレミアム生ビール"
+        },
+        "price": 650
+      },
+      {
+        "name": {
+          "en": "Extra Cold Beer",
+          "zh-tw": "朝日超冷啤酒",
+          "zh-cn": "朝日超冷啤酒",
+          "ja": "エクストラコールド"
+        },
+        "price": 600
+      },
+      {
+        "name": {
+          "en": "Extra Cold Beer (Large)",
+          "zh-tw": "朝日超冷啤酒 大杯",
+          "zh-cn": "朝日超冷啤酒 大杯",
+          "ja": "エクストラコールド 大"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Asahi Super Dry",
+          "zh-tw": "朝日超清爽啤酒",
+          "zh-cn": "朝日超清爽啤酒",
+          "ja": "スーパードライ"
+        },
+        "price": 650
+      },
+      {
+        "name": {
+          "en": "Asahi Super Dry (Large)",
+          "zh-tw": "朝日超清爽啤酒 大杯",
+          "zh-cn": "朝日超清爽啤酒 大杯",
+          "ja": "スーパードライ 大"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Asahi Super Dry (Medium Bottle)",
+          "zh-tw": "朝日超乾啤酒（中瓶）",
+          "zh-cn": "朝日超乾啤酒（中瓶）",
+          "ja": "アサヒスーパードライ（中瓶）"
+        },
+        "price": 600
+      },
+      {
+        "name": {
+          "en": "Kirin Lager Beer (Medium Bottle)",
+          "zh-tw": "麒麟拉格啤酒（中瓶）",
+          "zh-cn": "麒麟拉格啤酒（中瓶）",
+          "ja": "キリンラガービール（中瓶）"
+        },
+        "price": 600
+      },
+      {
+        "name": {
+          "en": "Premium Malts (Medium Bottle)",
+          "zh-tw": "Premium Malts啤酒（中瓶）",
+          "zh-cn": "Premium Malts啤酒（中瓶）",
+          "ja": "プレミアムモルツ（中瓶）"
+        },
+        "price": 750
+      },
+      {
+        "name": {
+          "en": "Asahi Dry Zero",
+          "zh-tw": "朝日無酒精啤酒",
+          "zh-cn": "朝日无酒精啤酒",
+          "ja": "ドライゼロ"
+        },
+        "price": 500
+      },
+      {
+        "name": {
+          "en": "Asahi Dry Zero (Large)",
+          "zh-tw": "朝日無酒精啤酒 大杯",
+          "zh-cn": "朝日无酒精啤酒 大杯",
+          "ja": "ドライゼロ 大"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Oolong Highball",
+          "zh-tw": "烏龍茶高球",
+          "zh-cn": "乌龙茶高球",
+          "ja": "ウーロンハイ"
+        },
+        "price": 500
+      },
+      {
+        "name": {
+          "en": "Oolong Highball (Large)",
+          "zh-tw": "烏龍茶高球 大杯",
+          "zh-cn": "乌龙茶高球 大杯",
+          "ja": "ウーロンハイ 大"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Lemon Sour",
+          "zh-tw": "檸檬沙瓦",
+          "zh-cn": "柠檬沙瓦",
+          "ja": "レモンサワー"
+        },
+        "price": 500
+      },
+      {
+        "name": {
+          "en": "Lemon Sour (Large)",
+          "zh-tw": "檸檬沙瓦 大杯",
+          "zh-cn": "柠檬沙瓦 大杯",
+          "ja": "レモンサワー 大"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Japanese Tea Cocktail",
+          "zh-tw": "日本茶調酒",
+          "zh-cn": "日本茶调酒",
+          "ja": "日本茶割り"
+        },
+        "price": 500
+      },
+      {
+        "name": {
+          "en": "Japanese Tea Cocktail (Large)",
+          "zh-tw": "日本茶調酒 大杯",
+          "zh-cn": "日本茶调酒 大杯",
+          "ja": "日本茶割り 大"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Single Malt Yushiro Whisky (with Water)",
+          "zh-tw": "單一麥芽余市威士忌（兑水）",
+          "zh-cn": "单一麦芽余市威士忌（兑水）",
+          "ja": "シングルモルト余市 ウィスキー（水割り）"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Single Malt Yushiro Whisky Highball",
+          "zh-tw": "單一麥芽余市威士忌（高球）",
+          "zh-cn": "单一麦芽余市威士忌（高球）",
+          "ja": "シングルモルト余市 ハイボール"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Shaoxing Win 10-Year Aged",
+          "zh-tw": "10年陳釀紹興酒",
+          "zh-cn": "10年陈酿绍兴酒",
+          "ja": "紹興酒（10年物・古越老酒）マッコルリの華"
+        },
+        "price": 550
+      },
+      {
+        "name": {
+          "en": "Shaoxing Win 10-Year Aged (Bottle)",
+          "zh-tw": "10年陳釀紹興酒 瓶裝",
+          "zh-cn": "10年陈酿绍兴酒 瓶装",
+          "ja": "紹興酒（10年物・古越老酒）マッコルリの華（ボトル）"
+        },
+        "price": 1850
+      }
+    ]
+  },
+  "ソフトドリンク": {
+    "name": {
+      "en": "Soft Drink",
+      "zh-tw": "軟性飲料",
+      "zh-cn": "软性饮料",
+      "ja": "ソフトドリンク"
+    },
+    "items": [
+      {
+        "name": {
+          "en": "Japanese Tea",
+          "zh-tw": "日本茶",
+          "zh-cn": "日本茶",
+          "ja": "日本茶"
+        },
+        "price": 450
+      },
+      {
+        "name": {
+          "en": "Oolong Tea",
+          "zh-tw": "烏龍茶",
+          "zh-cn": "乌龙茶",
+          "ja": "ウーロン茶"
+        },
+        "price": 450
+      },
+      {
+        "name": {
+          "en": "Cola",
+          "zh-tw": "可樂",
+          "zh-cn": "可乐",
+          "ja": "コーラ"
+        },
+        "price": 300
+      },
+      {
+        "name": {
+          "en": "Carbonated Soft Drink",
+          "zh-tw": "西打汽水",
+          "zh-cn": "西打汽水",
+          "ja": "サイダー"
+        },
+        "price": 300
+      },
+      {
+        "name": {
+          "en": "Orange Juice",
+          "zh-tw": "香吉士",
+          "zh-cn": "橙汁",
+          "ja": "オレンジ"
+        },
+        "price": 300
+      },
+      {
+        "name": {
+          "en": "Apple Juice",
+          "zh-tw": "蘋果汁",
+          "zh-cn": "苹果汁",
+          "ja": "アップル"
+        },
+        "price": 300
+      },
+      {
+        "name": {
+          "en": "Ramune",
+          "zh-tw": "拉姆內彈珠汽水",
+          "zh-cn": "拉姆内弹珠汽水",
+          "ja": "ラムネ"
+        },
+        "price": 300
+      },
+      {
+        "name": {
+          "en": "Guarana Soda",
+          "zh-tw": "瓜拉那汽水",
+          "zh-cn": "瓜拉那汽水",
+          "ja": "ガラナ"
+        },
+        "price": 300
+      },
+      {
+        "name": {
+          "en": "Calpis",
+          "zh-tw": "可爾必思",
+          "zh-cn": "可尔必思",
+          "ja": "カルピス"
+        },
+        "price": 300
+      }
+    ]
+  },
+  "日本酒&果実酒": {
+    "name": {
+      "en": "Japanese Wine & Fruit Wine",
+      "zh-tw": "日本酒&果實酒",
+      "zh-cn": "日本酒&果实酒",
+      "ja": "日本酒&果実酒"
+    },
+    "items": [
+      {
+        "name": {
+          "en": "Denju Sake",
+          "zh-tw": "田酒",
+          "zh-cn": "田酒",
+          "ja": "田酒"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Hakkaisan Regular Sake",
+          "zh-tw": "八海山普通清酒",
+          "zh-cn": "八海山普通清酒",
+          "ja": "八海山 普通酒"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Bakuren Ultra-Dry Ginjo Sake",
+          "zh-tw": "霸連超辛口吟釀清酒",
+          "zh-cn": "霸连超辛口吟酿清酒",
+          "ja": "ばくれん 超辛口吟醸"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Kubota Senju Sake",
+          "zh-tw": "久保田千壽清酒",
+          "zh-cn": "久保田千寿清酒",
+          "ja": "久保田 千寿"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Dassai Sake",
+          "zh-tw": "獺祭清酒",
+          "zh-cn": "獺祭清酒",
+          "ja": "獺祭"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Kajiri Jin Kyuheiji Junmai Ginjo Sake",
+          "zh-tw": "釀酒人九平次純米吟釀清酒",
+          "zh-cn": "酿酒人九平次纯米吟酿清酒",
+          "ja": "醸し人九平次 純米吟釀"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Hot Sake",
+          "zh-tw": "熱燗清酒",
+          "zh-cn": "热燗清酒",
+          "ja": "熱燗"
+        },
+        "price": 1400
+      },
+      {
+        "name": {
+          "en": "Yama Umeshu",
+          "zh-tw": "八岐的梅酒",
+          "zh-cn": "八岐的梅酒",
+          "ja": "八岐の梅酒"
+        },
+        "price": 950
+      },
+      {
+        "name": {
+          "en": "Hōō Meitan Yuzu Sake",
+          "zh-tw": "鳳凰美田柚子酒",
+          "zh-cn": "凤凰美田柚子酒",
+          "ja": "鳳凰美田のゆず酒"
+        },
+        "price": 950
+      }
+    ]
+  },
+  "焼酎": {
+    "name": {
+      "en": "Shochu",
+      "zh-tw": "焼酎",
+      "zh-cn": "烧酒",
+      "ja": "焼酎"
+    },
+    "items": [
+      {
+        "name": {
+          "en": "Tomino Hozan",
+          "zh-tw": "富乃寶山",
+          "zh-cn": "富乃宝山",
+          "ja": "富乃宝山"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Mamushi",
+          "zh-tw": "摩無志",
+          "zh-cn": "摩无志",
+          "ja": "摩無志"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Koshu",
+          "zh-tw": "甑州",
+          "zh-cn": "甑州",
+          "ja": "甑州"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Kinpo Sakurai",
+          "zh-tw": "金峰櫻井",
+          "zh-cn": "金峰樱井",
+          "ja": "金峰櫻井"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Toji Junpei",
+          "zh-tw": "杜氏潤平",
+          "zh-cn": "杜氏润平",
+          "ja": "杜氏潤平"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Mitsutake",
+          "zh-tw": "三岳",
+          "zh-cn": "三岳",
+          "ja": "三岳"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Akarui Nouson",
+          "zh-tw": "明亮農村",
+          "zh-cn": "明亮农村",
+          "ja": "明るい農村"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Nakamura",
+          "zh-tw": "中村",
+          "zh-cn": "中村",
+          "ja": "なかむら"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Issho",
+          "zh-tw": "一尚",
+          "zh-cn": "一尚",
+          "ja": "一尚"
+        },
+        "price": 900
+      },
+      {
+        "name": {
+          "en": "Isami",
+          "zh-tw": "伊佐美",
+          "zh-cn": "伊佐美",
+          "ja": "伊佐美"
+        },
+        "price": 1050
+      },
+      {
+        "name": {
+          "en": "Isami",
+          "zh-tw": "伊佐美",
+          "zh-cn": "伊佐美",
+          "ja": "伊佐美"
+        },
+        "price": 1050
+      },
+      {
+        "name": {
+          "en": "Naka Naka Imo Shochu",
+          "zh-tw": "中々芋燒酎",
+          "zh-cn": "中中芋烧酒",
+          "ja": "中々麦焼酎"
+        },
+        "price": 900
       }
     ]
   }
