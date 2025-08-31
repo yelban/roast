@@ -1,7 +1,7 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
 
 // 版本號 - 當應用版本更新時，這個值會改變
-const APP_VERSION = '0.4.6';
+const APP_VERSION = '0.4.7';
 const MENU_CACHE_NAME = 'api-menu-v' + APP_VERSION;
 const OLD_MENU_CACHE_PATTERN = /^api-menu-v/;
 
@@ -53,14 +53,12 @@ if (workbox) {
           maxAgeSeconds: 6 * 60 * 60, // 6小時
           purgeOnQuotaError: true
         }),
-        // 自定義快取鍵策略，包含版本參數
+        // 自定義快取鍵策略，忽略版本參數以確保快取有效
         {
           cacheKeyWillBeUsed: async ({ request }) => {
             const url = new URL(request.url)
-            // 如果沒有版本參數，使用當前時間戳作為版本
-            if (!url.searchParams.has('v')) {
-              url.searchParams.set('v', Date.now().toString())
-            }
+            // 移除版本參數，使用固定的快取鍵
+            url.searchParams.delete('v')
             return url.toString()
           }
         }

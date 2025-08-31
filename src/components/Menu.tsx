@@ -237,9 +237,9 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
       
       const protocol = window.location.protocol
       const host = window.location.host
-      // 從 package.json 獲取版本號來確保快取更新
-      const version = process.env.npm_package_version || '0.4.0'
-      const apiPath = basePath ? `${protocol}//${host}${basePath}/api/menu?v=${version}` : `${protocol}//${host}/api/menu?v=${version}`
+      // 使用時間戳記作為版本號，確保總是獲取最新資料
+      const timestamp = Date.now()
+      const apiPath = basePath ? `${protocol}//${host}${basePath}/api/menu?v=${timestamp}` : `${protocol}//${host}/api/menu?v=${timestamp}`
       const response = await fetch(apiPath)
       const data = await response.json()
       setMenuData(data)
