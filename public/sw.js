@@ -1,8 +1,13 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
 
+// 版本號 - 當應用版本更新時，這個值會改變
+const APP_VERSION = '0.4.6';
+const MENU_CACHE_NAME = 'api-menu-v' + APP_VERSION;
+const OLD_MENU_CACHE_PATTERN = /^api-menu-v/;
+
 // 確保 workbox 已載入
 if (workbox) {
-  console.log('Workbox is loaded');
+  console.log('Workbox is loaded with version:', APP_VERSION);
 
   // @ts-expect-error - self.__WB_MANIFEST 由 Workbox 在運行時注入
   const manifestEntries = self.__WB_MANIFEST || [];
@@ -36,11 +41,11 @@ if (workbox) {
     })
   );
 
-  // API 路由快取
+  // API 路由快取 - 使用版本化的快取名稱
   workbox.routing.registerRoute(
     ({ url }) => url.pathname.startsWith('/api/menu'),
     new workbox.strategies.NetworkFirst({
-      cacheName: 'api-menu',
+      cacheName: MENU_CACHE_NAME,
       networkTimeoutSeconds: 3,
       plugins: [
         new workbox.expiration.ExpirationPlugin({
@@ -210,6 +215,53 @@ if (workbox) {
     }
   })
   
+  // Service Worker 安裝事件 - 清除舊版本的菜單快取
+  self.addEventListener('install', (event) => {
+    console.log('Service Worker installing with version:', APP_VERSION);
+    
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter((cacheName) => {
+              // 刪除所有舊版本的菜單快取
+              return OLD_MENU_CACHE_PATTERN.test(cacheName) && cacheName !== MENU_CACHE_NAME;
+            })
+            .map((cacheName) => {
+              console.log('Deleting old menu cache:', cacheName);
+              return caches.delete(cacheName);
+            })
+        );
+      })
+    );
+    
+    // 立即激活新的 Service Worker
+    self.skipWaiting();
+  });
+
+  // Service Worker 激活事件
+  self.addEventListener('activate', (event) => {
+    console.log('Service Worker activated with version:', APP_VERSION);
+    
+    event.waitUntil(
+      // 立即控制所有客戶端
+      self.clients.claim().then(() => {
+        // 通知所有客戶端版本已更新
+        return self.clients.matchAll().then((clients) => {
+          return Promise.all(
+            clients.map((client) => {
+              return client.postMessage({
+                type: 'VERSION_UPDATE',
+                version: APP_VERSION,
+                message: '應用程式已更新到新版本'
+              });
+            })
+          );
+        });
+      })
+    );
+  });
+
   // 背景同步支援
   self.addEventListener('sync', (event) => {
     if (event.tag === 'tts-background-sync') {
