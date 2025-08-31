@@ -1,7 +1,7 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
 
 // 版本號 - 當應用版本更新時，這個值會改變
-const APP_VERSION = '0.4.7';
+const APP_VERSION = '0.4.8';
 const MENU_CACHE_NAME = 'api-menu-v' + APP_VERSION;
 const OLD_MENU_CACHE_PATTERN = /^api-menu-v/;
 

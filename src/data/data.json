@@ -969,16 +969,25 @@
           "en": "Shaoxing Win 10-Year Aged",
           "zh-tw": "10年陳釀紹興酒",
           "zh-cn": "10年陈酿绍兴酒",
-          "ja": "紹興酒（10年物・古越老酒）マッコルリの華"
+          "ja": "紹興酒（10年物・古越老酒）"
+        },
+        "price": 1000
+      },
+      {
+        "name": {
+          "en": "Korean Makgeolli with Floral Notes",
+          "zh-tw": "韓式米酒・花香",
+          "zh-cn": "韩式米酒・花香",
+          "ja": "マッコルリの華"
         },
         "price": 550
       },
       {
         "name": {
-          "en": "Shaoxing Win 10-Year Aged (Bottle)",
-          "zh-tw": "10年陳釀紹興酒 瓶裝",
-          "zh-cn": "10年陈酿绍兴酒 瓶装",
-          "ja": "紹興酒（10年物・古越老酒）マッコルリの華（ボトル）"
+          "en": "Korean Makgeolli with Floral Notes (Bottle)",
+          "zh-tw": "韓式米酒・花香（瓶裝）",
+          "zh-cn": "韩式米酒・花香（瓶装）",
+          "ja": "マッコルリの華（ボトル）"
         },
         "price": 1850
       }
