@@ -1157,22 +1157,24 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
 
   return (
     <div className="relative min-h-screen">
-      {/* 固定在右下角的購物車按鈕 */}
-      <Button
-        variant="default"
-        size="lg"
-        className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 bg-red-600 hover:bg-red-700 shadow-lg"
-        onClick={() => toggleCart('menu')}
-      >
-        <div className="relative">
-          <ShoppingCart className="h-6 w-6 text-white" />
-          {getItemCount() > 0 && (
-            <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-              {getItemCount()}
-            </span>
-          )}
-        </div>
-      </Button>
+      {/* 固定在右下角的購物車按鈕 - 只在 POS 模式顯示 */}
+      {mode === 'pos' && (
+        <Button
+          variant="default"
+          size="lg"
+          className="fixed bottom-6 right-6 z-50 rounded-full h-14 w-14 p-0 bg-red-600 hover:bg-red-700 shadow-lg"
+          onClick={() => toggleCart('menu')}
+        >
+          <div className="relative">
+            <ShoppingCart className="h-6 w-6 text-white" />
+            {getItemCount() > 0 && (
+              <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {getItemCount()}
+              </span>
+            )}
+          </div>
+        </Button>
+      )}
       
       <div 
         className="relative overflow-auto"
@@ -1382,52 +1384,54 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                   </div>
                 </div>
                 
-                {/* 購物車按鈕區域 */}
-                <div className="pt-3 mt-3 border-t flex justify-between items-center">
-                  <Button
-                    variant="default"
-                    size="lg"
-                    className="flex-1 mr-2 bg-red-600 hover:bg-red-700 text-white"
-                    onClick={() => {
-                      const price = typeof selectedItem.price === 'object' 
-                        ? selectedItem.price.normal || 0 
-                        : typeof selectedItem.price === 'number' 
-                        ? selectedItem.price 
-                        : 0
-                      
-                      addItem({
-                        name: selectedItem.name,
-                        price: price,
-                        quantity: quantity
-                      })
-                      
-                      setIsDialogOpen(false)
-                      toast.success(`${t('addedToCart', language)}：${selectedItem.name[language]} x ${quantity}`, {
-                        duration: 2000,
-                        position: 'top-center'
-                      })
-                    }}
-                  >
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    {t('addToCart', language)}
-                  </Button>
-                  
-                  <Button
-                    variant="default"
-                    size="lg"
-                    className="relative bg-red-600 hover:bg-red-700 text-white h-12 w-12 p-0 rounded-full shadow-md"
-                    onClick={() => {
-                      toggleCart('dialog')
-                    }}
-                  >
-                    <ShoppingCart className="h-5 w-5 text-white" />
-                    {getItemCount() > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                        {getItemCount()}
-                      </span>
-                    )}
-                  </Button>
-                </div>
+                {/* 購物車按鈕區域 - 只在 POS 模式顯示 */}
+                {mode === 'pos' && (
+                  <div className="pt-3 mt-3 border-t flex justify-between items-center">
+                    <Button
+                      variant="default"
+                      size="lg"
+                      className="flex-1 mr-2 bg-red-600 hover:bg-red-700 text-white"
+                      onClick={() => {
+                        const price = typeof selectedItem.price === 'object' 
+                          ? selectedItem.price.normal || 0 
+                          : typeof selectedItem.price === 'number' 
+                          ? selectedItem.price 
+                          : 0
+                        
+                        addItem({
+                          name: selectedItem.name,
+                          price: price,
+                          quantity: quantity
+                        })
+                        
+                        setIsDialogOpen(false)
+                        toast.success(`${t('addedToCart', language)}：${selectedItem.name[language]} x ${quantity}`, {
+                          duration: 2000,
+                          position: 'top-center'
+                        })
+                      }}
+                    >
+                      <ShoppingCart className="mr-2 h-5 w-5" />
+                      {t('addToCart', language)}
+                    </Button>
+                    
+                    <Button
+                      variant="default"
+                      size="lg"
+                      className="relative bg-red-600 hover:bg-red-700 text-white h-12 w-12 p-0 rounded-full shadow-md"
+                      onClick={() => {
+                        toggleCart('dialog')
+                      }}
+                    >
+                      <ShoppingCart className="h-5 w-5 text-white" />
+                      {getItemCount() > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          {getItemCount()}
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </FontWrapper>
