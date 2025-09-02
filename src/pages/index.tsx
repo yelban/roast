@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Menu from '@/components/Menu'
+import LoginForm from '@/components/LoginForm'
 import Seo from '@/components/Seo'
 import { Language } from '@/types/menu'
 import Image from 'next/image'
@@ -41,6 +42,8 @@ export default function Home() {
   const { setTableNumber, loadTableNumber } = useCartStore()
   const router = useRouter()
   const [isPosMode, setIsPosMode] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   
   useEffect(() => {
     initializeLanguage()
@@ -53,8 +56,29 @@ export default function Home() {
     }
     
     // 檢測 POS 模式
-    setIsPosMode(mode === 'pos')
+    const posMode = mode === 'pos'
+    setIsPosMode(posMode)
+    
+    // 檢查 POS 模式的驗證狀態
+    if (posMode) {
+      const authStatus = localStorage.getItem('pos-authenticated')
+      const authTimestamp = localStorage.getItem('pos-auth-timestamp')
+      
+      // 檢查是否有有效的登入狀態
+      if (authStatus === 'true' && authTimestamp) {
+        setIsAuthenticated(true)
+      } else {
+        setIsAuthenticated(false)
+      }
+    }
+    
+    setIsCheckingAuth(false)
   }, [initializeLanguage, loadTableNumber, router.query, setTableNumber])
+
+  // 處理登入成功
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true)
+  }
 
   // 語言順序定義
   const languageOrder: Language[] = ['ja', 'zh-tw', 'zh-cn', 'en']
@@ -93,7 +117,33 @@ export default function Home() {
 
   const metadata = getMetadata(language)
 
-  if (isPosMode) {
+  // 如果正在檢查驗證狀態，顯示載入畫面
+  if (isPosMode && isCheckingAuth) {
+    return (
+      <>
+        <Seo {...metadata} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+          <div className="text-center">
+            <div className="h-8 w-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">載入中...</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // POS 模式：如果未驗證，顯示登入表單
+  if (isPosMode && !isAuthenticated) {
+    return (
+      <>
+        <Seo {...metadata} />
+        <LoginForm onLoginSuccess={handleLoginSuccess} />
+      </>
+    )
+  }
+
+  // POS 模式：已驗證，顯示 POS 介面
+  if (isPosMode && isAuthenticated) {
     return (
       <>
         <Seo {...metadata} />

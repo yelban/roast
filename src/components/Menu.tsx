@@ -14,7 +14,7 @@ import { useLanguageStore, languageOrder } from '@/store/languageStore'
 import { getFontClass, getTitleFontClass } from '@/config/fonts'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Volume2, Minus, Plus, ShoppingCart } from 'lucide-react'
+import { Volume2, Minus, Plus, ShoppingCart, LogOut } from 'lucide-react'
 import { FontWrapper } from '@/components/FontWrapper'
 import { generateHash } from '@/lib/utils'
 import { recordCacheUsage } from '@/lib/cacheMetrics'
@@ -178,7 +178,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
   const [preloadedQuantityAudios, setPreloadedQuantityAudios] = useState<{ [key: number]: string }>({})
   const [isPreloading, setIsPreloading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [showTableSelector, setShowTableSelector] = useState(mode === 'pos' && !tableNumber)
+  const [showTableSelector, setShowTableSelector] = useState(false) // POS 模式不強制選擇桌號
   const [showTableSelectorDialog, setShowTableSelectorDialog] = useState(false)
 
   // 音效功能
@@ -844,7 +844,9 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                     <span className="text-sm text-gray-700">
                       {language === 'ja' ? 'テーブル' : language === 'zh-tw' ? '桌號' : language === 'zh-cn' ? '桌号' : 'Table'}
                     </span>
-                    <span className="ml-2 font-bold text-xl text-red-600">{tableNumber}</span>
+                    <span className="ml-2 font-bold text-xl text-red-600">
+                      {tableNumber || (language === 'ja' ? 'POS' : language === 'zh-tw' ? 'POS' : language === 'zh-cn' ? 'POS' : 'POS')}
+                    </span>
                   </div>
                   
                   <Button
@@ -853,23 +855,45 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                     onClick={() => setShowTableSelectorDialog(true)}
                     className="border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 hover:text-gray-900 font-medium transition-all"
                   >
-                    {language === 'ja' ? '変更' : language === 'zh-tw' ? '變更' : language === 'zh-cn' ? '变更' : 'Change'}
+                    {tableNumber 
+                      ? (language === 'ja' ? '変更' : language === 'zh-tw' ? '變更' : language === 'zh-cn' ? '变更' : 'Change')
+                      : (language === 'ja' ? '選択' : language === 'zh-tw' ? '選擇' : language === 'zh-cn' ? '选择' : 'Select')
+                    }
                   </Button>
                 </div>
                 
-                {/* 購物車按鈕 */}
-                <Button
-                  onClick={() => toggleCart('menu')}
-                  className="relative bg-red-600 hover:bg-red-700 text-white"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  {t('cart', language)}
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-yellow-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </Button>
+                {/* 購物車和登出按鈕 */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => toggleCart('menu')}
+                    className="relative bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <ShoppingCart className="h-5 w-5 mr-2" />
+                    {t('cart', language)}
+                    {cartItemCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-yellow-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </Button>
+                  
+                  {/* 登出按鈕 */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm('確認登出 POS 系統？')) {
+                        localStorage.removeItem('pos-authenticated')
+                        localStorage.removeItem('pos-auth-timestamp')
+                        window.location.reload()
+                      }
+                    }}
+                    className="border-gray-300 hover:border-red-400 hover:bg-red-50 text-gray-700 hover:text-red-700 transition-all"
+                    title="登出"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
             
