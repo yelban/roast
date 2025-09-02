@@ -1,4 +1,5 @@
 import React, { useEffect, useState, TouchEvent } from 'react'
+// Force recompile - timestamp: ${Date.now()}
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
@@ -893,9 +894,17 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                   
                   {/* 簡潔的菜品內容 */}
                   <div className="space-y-2">
-                    <h3 className={`font-bold text-lg leading-tight text-gray-800 group-hover:${colors.text} transition-colors duration-200 min-h-[2.5rem] flex items-center`}>
-                      {item.name[language]}
-                    </h3>
+                    <div className="space-y-1">
+                      <h3 className={`font-bold text-lg leading-tight text-gray-800 group-hover:${colors.text} transition-colors duration-200 ${item.note?.[language] && item.note[language].trim() !== '' ? 'min-h-0' : 'min-h-[2.5rem]'} flex items-center`}>
+                        {item.name[language]}
+                      </h3>
+                      {/* 正常的 note 顯示邏輯 */}
+                      {item.note && item.note[language] && item.note[language].trim() !== '' && (
+                        <p className="text-sm text-gray-500 leading-tight">
+                          {item.note[language]}
+                        </p>
+                      )}
+                    </div>
                     <div className="flex items-center justify-between">
                       <p className={`text-xl font-bold ${colors.text}`}>
                         {formatPOSPrice(item.price)}
@@ -944,9 +953,17 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                         onClick={() => handleItemClick(item, categoryData.name)}
                       >
                         <div className="flex items-center relative">
-                          <span className={`text-2xl ${isInCart ? 'text-gray-800 font-medium' : ''}`}>
-                            {item?.name?.[lang] || '未知項目'}
-                          </span>
+                          <div>
+                            <span className={`text-2xl ${isInCart ? 'text-gray-800 font-medium' : ''}`}>
+                              {item?.name?.[lang] || '未知項目'}
+                            </span>
+                            {/* 預設模式也顯示 note */}
+                            {item.note && item.note[lang] && item.note[lang].trim() !== '' && (
+                              <div className="text-sm text-gray-500 mt-1 leading-tight">
+                                {item.note[lang]}
+                              </div>
+                            )}
+                          </div>
                           {isInCart && (
                             <span className="absolute -top-1 -right-5 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
                               {cartQuantity}
