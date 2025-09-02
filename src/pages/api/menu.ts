@@ -1,9 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import menuData from '@/data/data.json'
+import { getMenuData } from '@/lib/r2DataFetch'
 import { generateHash } from '@/lib/utils'
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    // 從 R2 獲取菜單資料
+    const menuData = await getMenuData()
+    
     if (!menuData || typeof menuData !== 'object' || Object.keys(menuData).length === 0) {
       throw new Error('Invalid menu data')
     }

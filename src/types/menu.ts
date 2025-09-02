@@ -5,6 +5,9 @@ export interface MenuItem {
     [key in Language]: string
   }
   price: number | { normal?: number; half?: number } | string
+  note?: {
+    [key in Language]: string
+  }
 }
 
 export interface MenuCategory {
