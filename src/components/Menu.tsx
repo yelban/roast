@@ -328,7 +328,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
 
   // 設置默認選中第一個類別（POS模式用）
   useEffect(() => {
-    if (mode === 'pos' && menuData && Object.keys(menuData).length > 0 && !selectedCategory) {
+    if ((mode as 'customer' | 'pos') === 'pos' && menuData && Object.keys(menuData).length > 0 && !selectedCategory) {
       const firstCategory = Object.keys(menuData)[0]
       setSelectedCategory(firstCategory)
     }
@@ -433,7 +433,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
     const quantity = cartItem ? cartItem.quantity : 0
     
     // 在 POS 模式下，徽章只顯示整數
-    if (mode === 'pos') {
+    if ((mode as 'customer' | 'pos') === 'pos') {
       const roundedQuantity = Math.round(quantity * 10) / 10
       return Math.floor(roundedQuantity)
     }
@@ -1037,7 +1037,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
     </div>
   )
 
-  if (mode === 'pos') {
+  if ((mode as 'customer' | 'pos') === 'pos') {
     if (showTableSelector && !tableNumber) {
       return (
         <TableSelector 
@@ -1342,7 +1342,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
   return (
     <div className="relative min-h-screen">
       {/* 固定在右下角的購物車按鈕 - 只在 POS 模式顯示 */}
-      {mode === 'pos' && (
+      {(mode as 'customer' | 'pos') === 'pos' && (
         <Button
           variant="default"
           size="lg"
@@ -1569,7 +1569,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                 </div>
                 
                 {/* 購物車按鈕區域 - 只在 POS 模式顯示 */}
-                {mode === 'pos' && (
+                {(mode as 'customer' | 'pos') === 'pos' && (
                   <div className="pt-3 mt-3 border-t flex justify-between items-center">
                     <Button
                       variant="default"

@@ -44,20 +44,6 @@ export default function MenuEditor() {
   const [newCategory, setNewCategory] = useState<{ name: string } | null>(null)
   const [addingItem, setAddingItem] = useState<{ categoryKey: string, item: MenuItem } | null>(null)
 
-  // 檢查登入狀態
-  useEffect(() => {
-    const token = localStorage.getItem('adminToken')
-    const expiry = localStorage.getItem('adminTokenExpiry')
-    
-    if (!token || !expiry || Date.now() > parseInt(expiry)) {
-      router.push('/admin/menu-editor/login')
-      return
-    }
-    
-    fetchMenuData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchMenuData])
-
   const fetchMenuData = useCallback(async (bypassCache = false) => {
     setIsLoading(true)
     setError('')
@@ -98,6 +84,20 @@ export default function MenuEditor() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 檢查登入狀態
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken')
+    const expiry = localStorage.getItem('adminTokenExpiry')
+    
+    if (!token || !expiry || Date.now() > parseInt(expiry)) {
+      router.push('/admin/menu-editor/login')
+      return
+    }
+    
+    fetchMenuData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchMenuData])
 
   const fetchBackups = async () => {
     try {
@@ -454,7 +454,7 @@ export default function MenuEditor() {
                             <div className="flex items-center gap-2 mb-2">
                               <span className="font-medium">{item.name['ja']}</span>
                               <Badge variant="outline">
-                                ¥{typeof item.price === 'number' ? item.price : item.price.normal || 0}
+                                ¥{typeof item.price === 'number' ? item.price : (typeof item.price === 'object' ? item.price.normal || 0 : 0)}
                               </Badge>
                               {item.cp && <Badge className="bg-orange-100 text-orange-800">CP</Badge>}
                             </div>
@@ -540,7 +540,7 @@ export default function MenuEditor() {
                     <Input
                       className="mt-1 border-blue-300 dark:border-blue-600 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-gray-100"
                       type="number"
-                      value={typeof editingItem.item.price === 'number' ? editingItem.item.price : editingItem.item.price.normal || 0}
+                      value={typeof editingItem.item.price === 'number' ? editingItem.item.price : (typeof editingItem.item.price === 'object' ? editingItem.item.price.normal || 0 : 0)}
                       onChange={(e) => {
                         const newItem = { ...editingItem.item }
                         newItem.price = parseInt(e.target.value) || 0
@@ -729,7 +729,7 @@ export default function MenuEditor() {
                     <Input
                       className="mt-1 border-blue-300 dark:border-blue-600 focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-gray-100"
                       type="number"
-                      value={typeof addingItem.item.price === 'number' ? addingItem.item.price : addingItem.item.price.normal || 0}
+                      value={typeof addingItem.item.price === 'number' ? addingItem.item.price : (typeof addingItem.item.price === 'object' ? addingItem.item.price.normal || 0 : 0)}
                       onChange={(e) => {
                         const newItem = { ...addingItem.item }
                         newItem.price = parseInt(e.target.value) || 0
