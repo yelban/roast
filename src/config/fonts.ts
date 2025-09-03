@@ -58,9 +58,13 @@ export const getFontClass = (lang: Language) => {
 
 export const getTitleFontClass = (lang: Language) => {
   switch (lang) {
+    case 'ja':
+      return 'font-kurewa-jp'
+    case 'zh-tw':
+      return 'font-kurewa-tc'
     case 'zh-cn':
-      return 'font-dingliehakkafont'
+      return 'font-jason2'
     default:
-      return 'font-masa'
+      return 'font-kurewa-jp'
   }
 }
