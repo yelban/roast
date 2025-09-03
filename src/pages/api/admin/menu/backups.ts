@@ -18,15 +18,32 @@ async function handler(
     const formattedBackups = backups.map(backup => ({
       id: backup.id,
       timestamp: backup.timestamp,
-      date: new Date(backup.timestamp).toLocaleString('ja-JP', {
-        timeZone: 'Asia/Tokyo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      }),
+      date: (() => {
+        try {
+          // 優先使用 Intl.DateTimeFormat (更可靠)
+          return new Intl.DateTimeFormat('ja-JP', {
+            timeZone: 'Asia/Tokyo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          }).format(new Date(backup.timestamp))
+        } catch (error) {
+          // 後備方案：手動計算東京時區
+          console.warn('Intl.DateTimeFormat failed, using manual conversion:', error)
+          const date = new Date(backup.timestamp + (9 * 60 * 60 * 1000)) // UTC + 9 小時
+          const year = date.getUTCFullYear()
+          const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+          const day = String(date.getUTCDate()).padStart(2, '0')
+          const hour = String(date.getUTCHours()).padStart(2, '0')
+          const minute = String(date.getUTCMinutes()).padStart(2, '0')
+          const second = String(date.getUTCSeconds()).padStart(2, '0')
+          return `${year}/${month}/${day} ${hour}:${minute}:${second}`
+        }
+      })(),
       size: `${(backup.size / 1024).toFixed(2)} KB`
     }))
     

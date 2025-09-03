@@ -247,6 +247,12 @@ export class R2MenuManager {
           // 使用檔案的實際 LastModified 時間而不是檔案名稱中的時間戳記
           const timestamp = new Date(lastModified).getTime()
           
+          // 調試日誌
+          console.log('Backup file:', key)
+          console.log('LastModified string:', lastModified)
+          console.log('Parsed timestamp:', timestamp)
+          console.log('Converted back to date:', new Date(timestamp).toISOString())
+          
           backups.push({
             id: key,
             timestamp,
