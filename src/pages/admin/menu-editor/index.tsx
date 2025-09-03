@@ -30,14 +30,6 @@ import {
 } from 'lucide-react'
 import { MenuData, MenuCategory, MenuItem, Language } from '@/types/menu'
 
-const languages: Language[] = ['ja', 'zh-tw', 'zh-cn', 'en']
-const languageLabels = {
-  'ja': '日本語',
-  'zh-tw': '繁体中国語',
-  'zh-cn': '簡体中国語',
-  'en': '英語'
-}
-
 export default function MenuEditor() {
   const router = useRouter()
   const [menuData, setMenuData] = useState<MenuData | null>(null)
@@ -49,7 +41,7 @@ export default function MenuEditor() {
   const [backups, setBackups] = useState<any[]>([])
   const [showBackups, setShowBackups] = useState(false)
   const [editingItem, setEditingItem] = useState<{ categoryKey: string, itemIndex: number, item: MenuItem } | null>(null)
-  const [newCategory, setNewCategory] = useState<{ key: string, names: Record<Language, string> } | null>(null)
+  const [newCategory, setNewCategory] = useState<{ name: string } | null>(null)
   const [addingItem, setAddingItem] = useState<{ categoryKey: string, item: MenuItem } | null>(null)
 
   // 檢查登入狀態
@@ -191,18 +183,33 @@ export default function MenuEditor() {
   }
 
   const handleAddCategory = () => {
-    if (!newCategory || !newCategory.key) return
+    if (!newCategory || !newCategory.name.trim()) return
     
     if (!menuData) return
     
+    // 檢查日文名稱是否重複
+    const existingNames = Object.values(menuData).map(category => category.name?.['ja'] || '')
+    if (existingNames.includes(newCategory.name.trim())) {
+      setError('この分類名は既に存在します')
+      return
+    }
+    
+    // 自動生成 key (使用時間戳記)
+    const categoryKey = `category_${Date.now()}`
+    
     const newData = { ...menuData }
-    newData[newCategory.key] = {
-      name: newCategory.names,
+    newData[categoryKey] = {
+      name: {
+        'ja': newCategory.name.trim(),
+        'zh-tw': '',
+        'zh-cn': '', 
+        'en': ''
+      },
       items: []
     }
     
     setMenuData(newData)
-    setSelectedCategory(newCategory.key)
+    setSelectedCategory(categoryKey)
     setNewCategory(null)
   }
 
@@ -384,10 +391,7 @@ export default function MenuEditor() {
                 <CardTitle className="text-lg">カテゴリ</CardTitle>
                 <Button
                   size="sm"
-                  onClick={() => setNewCategory({ 
-                    key: '', 
-                    names: { 'zh-tw': '', 'zh-cn': '', 'en': '', 'ja': '' } 
-                  })}
+                  onClick={() => setNewCategory({ name: '' })}
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   カテゴリを追加
@@ -874,26 +878,13 @@ export default function MenuEditor() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>カテゴリコード (英語)</Label>
+                <Label>分類名稱</Label>
                 <Input
-                  placeholder="例: drinks, desserts"
-                  value={newCategory.key}
-                  onChange={(e) => setNewCategory({ ...newCategory, key: e.target.value })}
+                  placeholder="例: 飲み物、デザート"
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
                 />
               </div>
-              {languages.map(lang => (
-                <div key={lang}>
-                  <Label>{languageLabels[lang]}</Label>
-                  <Input
-                    value={newCategory.names[lang]}
-                    onChange={(e) => {
-                      const newNames = { ...newCategory.names }
-                      newNames[lang] = e.target.value
-                      setNewCategory({ ...newCategory, names: newNames })
-                    }}
-                  />
-                </div>
-              ))}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setNewCategory(null)}>
