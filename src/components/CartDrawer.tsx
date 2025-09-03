@@ -78,26 +78,96 @@ export default function CartDrawer() {
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
-                          className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-                        >
-                          <Minus className="h-4 w-4 text-gray-700 dark:text-gray-300" />
-                        </Button>
-                        <span className="w-12 text-center font-medium text-gray-900 dark:text-white text-lg">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <Plus className="h-4 w-4 text-gray-700 dark:text-gray-300" />
-                        </Button>
-                      </div>
+                      {item.cp && item.cp !== "" ? (
+                        /* CP 品項：帶小數點控制 */
+                        <div className="flex items-center gap-1">
+                          {/* 小 -0.1 按鈕 */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newQuantity = Math.max(0.1, Math.round((item.quantity - 0.1) * 10) / 10)
+                              updateQuantity(item.id, newQuantity)
+                            }}
+                            disabled={item.quantity <= 0.1}
+                            className="h-6 w-6 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                          >
+                            <span className="text-xl text-gray-700 dark:text-gray-300">-</span>
+                          </Button>
+                          
+                          {/* 主 -1 按鈕 */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newQuantity = Math.max(1.0, item.quantity - 1)
+                              updateQuantity(item.id, newQuantity)
+                            }}
+                            disabled={item.quantity <= 1.0}
+                            className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                          >
+                            <Minus className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                          </Button>
+                          
+                          {/* 數量顯示 */}
+                          <span className="w-14 text-center font-medium text-gray-900 dark:text-white text-lg">
+                            {item.quantity.toFixed(1)}
+                          </span>
+                          
+                          {/* 主 +1 按鈕 */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newQuantity = Math.min(99, item.quantity + 1)
+                              updateQuantity(item.id, newQuantity)
+                            }}
+                            disabled={item.quantity >= 99}
+                            className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Plus className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                          </Button>
+                          
+                          {/* 小 +0.1 按鈕 */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newQuantity = Math.min(99.9, Math.round((item.quantity + 0.1) * 10) / 10)
+                              updateQuantity(item.id, newQuantity)
+                            }}
+                            disabled={item.quantity >= 99.9}
+                            className="h-6 w-6 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <span className="text-xl text-gray-700 dark:text-gray-300">+</span>
+                          </Button>
+                        </div>
+                      ) : (
+                        /* 一般品項：整數控制 */
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                          >
+                            <Minus className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                          </Button>
+                          <span className="w-12 text-center font-medium text-gray-900 dark:text-white text-lg">
+                            {item.quantity % 1 === 0 ? item.quantity : item.quantity.toFixed(1)}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Plus className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                          </Button>
+                        </div>
+                      )}
+                      
                       <div className="font-medium text-xl text-gray-900 dark:text-white">
                         {formatPrice(item.price * item.quantity)}
                       </div>

@@ -8,6 +8,7 @@ export interface MenuItem {
   note?: {
     [key in Language]: string
   }
+  cp?: string
 }
 
 export interface MenuCategory {

@@ -160,6 +160,21 @@ async function main() {
     console.log('📁 上傳的檔案:')
     console.log('   - data.json (菜單資料)')
     console.log('   - table.json (桌位資料)')
+    
+    // 嘗試清除 API 快取
+    try {
+      console.log('🧹 正在清除 API 快取...')
+      const response = await fetch('http://localhost:3000/api/clear-menu-cache', {
+        method: 'POST'
+      })
+      if (response.ok) {
+        console.log('✅ API 快取清除成功')
+      } else {
+        console.log('⚠️ API 快取清除失敗（這不會影響資料更新）')
+      }
+    } catch (error) {
+      console.log('⚠️ 無法連接到本地 API（這不會影響資料更新）')
+    }
 
   } catch (error) {
     console.error('❌ 上傳過程發生錯誤:', error.message)

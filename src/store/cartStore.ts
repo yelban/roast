@@ -87,7 +87,10 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   getItemCount: () => {
     const { items } = get()
-    return items.reduce((count, item) => count + item.quantity, 0)
+    const totalQuantity = items.reduce((count, item) => count + item.quantity, 0)
+    // 處理浮點數精度問題，然後向下取整
+    const roundedQuantity = Math.round(totalQuantity * 10) / 10
+    return Math.floor(roundedQuantity)
   },
 
   loadFromStorage: () => {

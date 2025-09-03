@@ -164,6 +164,14 @@ interface MenuProps {
 export default function Menu({ mode = 'customer' }: MenuProps) {
   const { language, setLanguage, slideDirection, setSlideDirection, nextLanguage, setNextLanguage } = useLanguageStore()
   const { addItem, getItemCount, toggleCart, items, tableNumber } = useCartStore()
+  
+  // 確保購物車數量只顯示整數
+  const getDisplayItemCount = () => {
+    const count = getItemCount()
+    // 處理浮點數精度問題，然後向下取整
+    const roundedCount = Math.round(count * 10) / 10
+    return Math.floor(roundedCount)
+  }
   const [menuData, setMenuData] = useState<MenuData | null>(null)
   const [isMenuLoading, setIsMenuLoading] = useState(true)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -173,7 +181,8 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
   const [isTTSLoading, setIsTTSLoading] = useState(false)
   const [audioPlayer, setAudioPlayer] = useState<StreamingAudioPlayer | null>(null)
   const [audioProgress, setAudioProgress] = useState<{ loaded: number; total: number } | null>(null)
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState<number>(1)
+  const [editablePrice, setEditablePrice] = useState<number>(0)
   const [isQuantityTTSLoading, setIsQuantityTTSLoading] = useState(false)
   const [preloadedQuantityAudios, setPreloadedQuantityAudios] = useState<{ [key: number]: string }>({})
   const [isPreloading, setIsPreloading] = useState(false)
@@ -327,7 +336,15 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
 
   const handleItemClick = (item: MenuItem, categoryName: { [key in Language]: string }) => {
     setSelectedItem({ ...item, categoryName })
-    setQuantity(1) // 重置數量為1
+    // 根據是否為 cp 品項設置初始數量
+    setQuantity(item.cp && item.cp !== "" ? 1.0 : 1)
+    // 初始化可編輯價格
+    const initialPrice = typeof item.price === 'object' 
+      ? item.price.normal || 0 
+      : typeof item.price === 'number' 
+      ? item.price 
+      : 0
+    setEditablePrice(initialPrice)
     setIsDialogOpen(true)
   }
 
@@ -413,7 +430,15 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
       
       return cartItem.name['ja'] === item.name['ja'] && cartItem.price === itemPrice
     })
-    return cartItem ? cartItem.quantity : 0
+    const quantity = cartItem ? cartItem.quantity : 0
+    
+    // 在 POS 模式下，徽章只顯示整數
+    if (mode === 'pos') {
+      const roundedQuantity = Math.round(quantity * 10) / 10
+      return Math.floor(roundedQuantity)
+    }
+    
+    return quantity
   }
 
   const formatPrice = (price: number | { normal?: number; half?: number } | string): React.JSX.Element => {
@@ -802,7 +827,7 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
   }
 
   const renderPOSContent = () => {
-    const cartItemCount = items.reduce((total, item) => total + item.quantity, 0)
+    const cartItemCount = getDisplayItemCount()
     const currentCategoryItems = menuData?.[selectedCategory]
 
     return (
@@ -1055,77 +1080,192 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                     <div className="text-lg text-red-900 font-bold text-center">
                       {selectedItem?.name?.ja?.match(/[()（].*$/)?.[0]}
                     </div>
+                    {/* CP 品項標記 - 除錯用 */}
+                    {selectedItem?.cp && (
+                      <div className="mt-2 text-center">
+                        <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-sm font-medium">
+                        カスタマイズ (cp={selectedItem.cp})
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </DialogTitle>
                 <DialogDescription className="sr-only">商品詳細資訊</DialogDescription>
               </DialogHeader>
               {selectedItem && (
                 <div className="space-y-2 px-0 pb-2">
+                  
                   {/* 數量選擇區域 */}
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <div className="text-center mb-2">
-                      <span className="text-gray-600 font-medium">{t('selectQuantity', language)}</span>
+                      <span className="text-gray-600 font-medium">
+                        {selectedItem.cp && selectedItem.cp !== "" ? "重量/數量" : t('selectQuantity', language)}
+                      </span>
                     </div>
-                    <div className="flex items-center justify-center gap-4">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
-                          ${quantity <= 1 
-                            ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
-                            : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
-                          }`}
-                        disabled={quantity <= 1}
-                        onClick={() => {
-                          const newQuantity = Math.max(1, quantity - 1)
-                          if (newQuantity === 1 && quantity === 2) {
-                            // 從 2 變成 1 (最低值)，播放邊界音效
-                            playButtonSound('boundary')
-                          } else {
-                            // 普通 - 音效
+                    
+                    {selectedItem.cp && selectedItem.cp !== "" ? (
+                      /* CP 品項：帶小數點控制 */
+                      <div className="flex items-center justify-center gap-2">
+                        {/* 小 -0.1 按鈕 */}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={`h-8 w-8 rounded-full border shadow-sm transition-all duration-200
+                            ${quantity <= 0.1 
+                              ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                              : 'border-gray-400 text-gray-600 bg-white hover:bg-gray-50 hover:border-gray-500 active:scale-95'
+                            }`}
+                          disabled={quantity <= 0.1}
+                          onClick={() => {
+                            const newQuantity = Math.max(0.1, Math.round((quantity - 0.1) * 10) / 10)
+                            setQuantity(newQuantity)
                             playButtonSound('minus')
-                          }
-                          setQuantity(newQuantity)
-                        }}
-                      >
-                        <Minus className="h-6 w-6 stroke-2" />
-                      </Button>
-                      
-                      <div className="bg-white border-2 border-gray-300 rounded-lg px-6 py-3 min-w-[4rem] text-center shadow-md">
-                        <span className="text-2xl font-bold text-gray-800">{quantity}</span>
-                      </div>
-                      
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
-                          ${quantity >= 9 
-                            ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
-                            : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
-                          }`}
-                        disabled={quantity >= 9}
-                        onClick={() => {
-                          const newQuantity = Math.min(9, quantity + 1)
-                          if (newQuantity === 9 && quantity === 8) {
-                            // 從 8 變成 9 (最高值)，播放邊界音效
-                            playButtonSound('boundary')
-                          } else {
-                            // 普通 + 音效
+                          }}
+                        >
+                          <span className="text-3xl">-</span>
+                        </Button>
+                        
+                        {/* 主 -1 按鈕 */}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
+                            ${quantity <= 1.0 
+                              ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                              : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
+                            }`}
+                          disabled={quantity <= 1.0}
+                          onClick={() => {
+                            const newQuantity = Math.max(1.0, quantity - 1)
+                            setQuantity(newQuantity)
+                            playButtonSound('minus')
+                          }}
+                        >
+                          <Minus className="h-6 w-6 stroke-2" />
+                        </Button>
+                        
+                        {/* 數量顯示 */}
+                        <div className="bg-white border-2 border-gray-300 rounded-lg px-6 py-3 min-w-[5rem] text-center shadow-md">
+                          <span className="text-2xl font-bold text-gray-800">{quantity.toFixed(1)}</span>
+                        </div>
+                        
+                        {/* 主 +1 按鈕 */}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
+                            ${quantity >= 99 
+                              ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                              : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
+                            }`}
+                          disabled={quantity >= 99}
+                          onClick={() => {
+                            const newQuantity = Math.min(99, quantity + 1)
+                            setQuantity(newQuantity)
                             playButtonSound('plus')
-                          }
-                          setQuantity(newQuantity)
-                        }}
-                      >
-                        <Plus className="h-6 w-6 stroke-2" />
-                      </Button>
-                    </div>
+                          }}
+                        >
+                          <Plus className="h-6 w-6 stroke-2" />
+                        </Button>
+                        
+                        {/* 小 +0.1 按鈕 */}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={`h-8 w-8 rounded-full border shadow-sm transition-all duration-200
+                            ${quantity >= 99.9 
+                              ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                              : 'border-gray-400 text-gray-600 bg-white hover:bg-gray-50 hover:border-gray-500 active:scale-95'
+                            }`}
+                          disabled={quantity >= 99.9}
+                          onClick={() => {
+                            const newQuantity = Math.min(99.9, Math.round((quantity + 0.1) * 10) / 10)
+                            setQuantity(newQuantity)
+                            playButtonSound('plus')
+                          }}
+                        >
+                          <span className="text-3xl">+</span>
+                        </Button>
+                      </div>
+                    ) : (
+                      /* 一般品項：整數控制 */
+                      <div className="flex items-center justify-center gap-4">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
+                            ${quantity <= 1 
+                              ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                              : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
+                            }`}
+                          disabled={quantity <= 1}
+                          onClick={() => {
+                            const newQuantity = Math.max(1, quantity - 1)
+                            if (newQuantity === 1 && quantity === 2) {
+                              // 從 2 變成 1 (最低值)，播放邊界音效
+                              playButtonSound('boundary')
+                            } else {
+                              // 普通 - 音效
+                              playButtonSound('minus')
+                            }
+                            setQuantity(newQuantity)
+                          }}
+                        >
+                          <Minus className="h-6 w-6 stroke-2" />
+                        </Button>
+                        
+                        <div className="bg-white border-2 border-gray-300 rounded-lg px-6 py-3 min-w-[4rem] text-center shadow-md">
+                          <span className="text-2xl font-bold text-gray-800">{quantity}</span>
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className={`h-12 w-12 rounded-full border-2 shadow-md transition-all duration-200
+                            ${quantity >= 9 
+                              ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed' 
+                              : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-500 hover:shadow-lg active:scale-95'
+                            }`}
+                          disabled={quantity >= 9}
+                          onClick={() => {
+                            const newQuantity = Math.min(9, quantity + 1)
+                            if (newQuantity === 9 && quantity === 8) {
+                              // 從 8 變成 9 (最高值)，播放邊界音效
+                              playButtonSound('boundary')
+                            } else {
+                              // 普通 + 音效
+                              playButtonSound('plus')
+                            }
+                            setQuantity(newQuantity)
+                          }}
+                        >
+                          <Plus className="h-6 w-6 stroke-2" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   
                   {/* 價格顯示 */}
                   <div className="py-2">
                     <div className="flex justify-center items-center gap-4">
-                      <div className="font-semibold text-gray-600">価格</div>
-                      <div className="text-2xl text-gray-900">{formatPrice(selectedItem.price)}</div>
+                      <div className="font-semibold text-gray-600">價格</div>
+                      <div className="text-2xl text-gray-900">
+                        {selectedItem.cp && selectedItem.cp !== "" ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400 mr-0.5 font-light align-bottom">¥</span>
+                            <input
+                              type="number"
+                              value={editablePrice}
+                              onChange={(e) => setEditablePrice(Number(e.target.value) || 0)}
+                              className="w-32 px-3 py-2 border border-gray-300 rounded-md text-center text-2xl font-bold text-gray-900 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-yellow-50"
+                              min="0"
+                              step="1"
+                            />
+                          </div>
+                        ) : (
+                          formatPrice(selectedItem.price)
+                        )}
+                      </div>
                     </div>
                   </div>
                   
@@ -1151,16 +1291,19 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                       size="lg"
                       className="flex-1 mr-2 bg-red-600 hover:bg-red-700 text-white"
                       onClick={() => {
-                        const price = typeof selectedItem.price === 'object' 
-                          ? selectedItem.price.normal || 0 
-                          : typeof selectedItem.price === 'number' 
-                          ? selectedItem.price 
-                          : 0
+                        const price = (selectedItem.cp && selectedItem.cp !== "") 
+                          ? editablePrice 
+                          : (typeof selectedItem.price === 'object' 
+                            ? selectedItem.price.normal || 0 
+                            : typeof selectedItem.price === 'number' 
+                            ? selectedItem.price 
+                            : 0)
                         
                         addItem({
                           name: selectedItem.name,
                           price: price,
-                          quantity: quantity
+                          quantity: quantity,
+                          cp: selectedItem.cp
                         })
                         
                         setIsDialogOpen(false)
@@ -1180,9 +1323,9 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                       }}
                     >
                       <ShoppingCart className="h-5 w-5 text-white" />
-                      {getItemCount() > 0 && (
+                      {getDisplayItemCount() > 0 && (
                         <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                          {getItemCount()}
+                          {getDisplayItemCount()}
                         </span>
                       )}
                     </Button>
@@ -1208,9 +1351,9 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
         >
           <div className="relative">
             <ShoppingCart className="h-6 w-6 text-white" />
-            {getItemCount() > 0 && (
+            {getDisplayItemCount() > 0 && (
               <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {getItemCount()}
+                {getDisplayItemCount()}
               </span>
             )}
           </div>
@@ -1442,7 +1585,8 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                         addItem({
                           name: selectedItem.name,
                           price: price,
-                          quantity: quantity
+                          quantity: quantity,
+                          cp: selectedItem.cp
                         })
                         
                         setIsDialogOpen(false)
@@ -1465,9 +1609,9 @@ export default function Menu({ mode = 'customer' }: MenuProps) {
                       }}
                     >
                       <ShoppingCart className="h-5 w-5 text-white" />
-                      {getItemCount() > 0 && (
+                      {getDisplayItemCount() > 0 && (
                         <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                          {getItemCount()}
+                          {getDisplayItemCount()}
                         </span>
                       )}
                     </Button>

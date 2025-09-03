@@ -8,6 +8,7 @@ export interface CartItem {
   price: number
   quantity: number
   addedAt: number
+  cp?: string
 }
 
 export interface CartState {
