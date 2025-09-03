@@ -47,6 +47,12 @@ async function handler(
       size: `${(backup.size / 1024).toFixed(2)} KB`
     }))
     
+    // 設置禁用快取標頭，確保每次都獲取最新的備份列表
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.setHeader('Pragma', 'no-cache')
+    res.setHeader('Expires', '0')
+    res.setHeader('Last-Modified', new Date().toUTCString())
+    
     return res.status(200).json({
       success: true,
       backups: formattedBackups

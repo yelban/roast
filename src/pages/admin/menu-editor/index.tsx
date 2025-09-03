@@ -111,9 +111,11 @@ export default function MenuEditor() {
   const fetchBackups = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('/api/admin/menu/backups', {
+      const response = await fetch(`/api/admin/menu/backups?t=${Date.now()}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       })
       
