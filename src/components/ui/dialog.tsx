@@ -42,8 +42,8 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute left-4 top-4 rounded-full bg-gray-100 p-2 transition-all hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none h-10 w-10 flex items-center justify-center">
-        <ChevronLeft className="h-6 w-6" />
+      <DialogPrimitive.Close className="absolute left-4 top-4 rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 p-2 transition-all hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none h-10 w-10 flex items-center justify-center shadow-sm">
+        <ChevronLeft className="h-6 w-6 text-gray-700 dark:text-gray-300" />
         <span className="sr-only">返回</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
