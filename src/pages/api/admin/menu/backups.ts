@@ -18,7 +18,15 @@ async function handler(
     const formattedBackups = backups.map(backup => ({
       id: backup.id,
       timestamp: backup.timestamp,
-      date: new Date(backup.timestamp).toLocaleString('zh-TW'),
+      date: new Date(backup.timestamp).toLocaleString('ja-JP', {
+        timeZone: 'Asia/Tokyo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }),
       size: `${(backup.size / 1024).toFixed(2)} KB`
     }))
     

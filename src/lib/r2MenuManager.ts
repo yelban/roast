@@ -220,36 +220,41 @@ export class R2MenuManager {
     console.log('List backups response XML:', text.substring(0, 500) + (text.length > 500 ? '...' : ''))
     
     // 使用正則表達式解析 XML（避免在 Edge Runtime 中使用 DOMParser）
-    const keyRegex = /<Key>([^<]+)<\/Key>/g
-    const sizeRegex = /<Size>([^<]+)<\/Size>/g
+    // 解析 Contents 區塊，每個檔案的資訊都在一個 Contents 標籤內
+    const contentsRegex = /<Contents>(.*?)<\/Contents>/gs
+    const keyRegex = /<Key>([^<]+)<\/Key>/
+    const sizeRegex = /<Size>([^<]+)<\/Size>/
+    const lastModifiedRegex = /<LastModified>([^<]+)<\/LastModified>/
     
-    const keys: string[] = []
-    const sizes: string[] = []
+    const backups: Array<{ id: string; timestamp: number; size: number }> = []
     
     let match
-    while ((match = keyRegex.exec(text)) !== null) {
-      keys.push(match[1])
-    }
-    
-    while ((match = sizeRegex.exec(text)) !== null) {
-      sizes.push(match[1])
-    }
-    
-    const backups = keys
-      .map((key, index) => {
-        const size = parseInt(sizes[index] || '0')
-        const fileMatch = key.match(/data-(\d+)\.json$/)
+    while ((match = contentsRegex.exec(text)) !== null) {
+      const contentXml = match[1]
+      
+      const keyMatch = keyRegex.exec(contentXml)
+      const sizeMatch = sizeRegex.exec(contentXml)
+      const lastModifiedMatch = lastModifiedRegex.exec(contentXml)
+      
+      if (keyMatch && sizeMatch && lastModifiedMatch) {
+        const key = keyMatch[1]
+        const size = parseInt(sizeMatch[1])
+        const lastModified = lastModifiedMatch[1]
         
+        // 檢查是否為備份檔案
+        const fileMatch = key.match(/data-(\d+)\.json$/)
         if (fileMatch) {
-          return {
+          // 使用檔案的實際 LastModified 時間而不是檔案名稱中的時間戳記
+          const timestamp = new Date(lastModified).getTime()
+          
+          backups.push({
             id: key,
-            timestamp: parseInt(fileMatch[1]),
+            timestamp,
             size
-          }
+          })
         }
-        return null
-      })
-      .filter(Boolean) as Array<{ id: string; timestamp: number; size: number }>
+      }
+    }
     
     console.log('Found backups:', backups.length, backups)
     
