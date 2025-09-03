@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,7 +38,7 @@ export default function MenuEditor() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const [backups, setBackups] = useState<any[]>([])
+  const [backups, setBackups] = useState<Array<{ id: string; date: string; size: string }>>([])
   const [showBackups, setShowBackups] = useState(false)
   const [editingItem, setEditingItem] = useState<{ categoryKey: string, itemIndex: number, item: MenuItem } | null>(null)
   const [newCategory, setNewCategory] = useState<{ name: string } | null>(null)
@@ -55,9 +55,10 @@ export default function MenuEditor() {
     }
     
     fetchMenuData()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchMenuData])
 
-  const fetchMenuData = async (bypassCache = false) => {
+  const fetchMenuData = useCallback(async (bypassCache = false) => {
     setIsLoading(true)
     setError('')
     
@@ -95,7 +96,8 @@ export default function MenuEditor() {
     } finally {
       setIsLoading(false)
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const fetchBackups = async () => {
     try {

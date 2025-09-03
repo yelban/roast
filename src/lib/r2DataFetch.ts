@@ -12,7 +12,7 @@ interface R2Config {
 class R2DataFetch {
   private config: R2Config
   private endpoint: string
-  private cache: Map<string, { data: any, timestamp: number, etag?: string }> = new Map()
+  private cache: Map<string, { data: unknown, timestamp: number, etag?: string }> = new Map()
   private readonly CACHE_TTL = 5 * 60 * 1000 // 5 分鐘快取
 
   constructor(config: R2Config) {
@@ -89,7 +89,7 @@ class R2DataFetch {
   }
 
   // 獲取 JSON 資料 (帶快取)
-  async getJsonData(key: string): Promise<any> {
+  async getJsonData(key: string): Promise<unknown> {
     // 檢查記憶體快取
     const cached = this.cache.get(key)
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
