@@ -221,7 +221,7 @@ export class R2MenuManager {
     
     // 使用正則表達式解析 XML（避免在 Edge Runtime 中使用 DOMParser）
     // 解析 Contents 區塊，每個檔案的資訊都在一個 Contents 標籤內
-    const contentsRegex = /<Contents>(.*?)<\/Contents>/gs
+    const contentsRegex = /<Contents>([\s\S]*?)<\/Contents>/g
     const keyRegex = /<Key>([^<]+)<\/Key>/
     const sizeRegex = /<Size>([^<]+)<\/Size>/
     const lastModifiedRegex = /<LastModified>([^<]+)<\/LastModified>/
