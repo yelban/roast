@@ -162,7 +162,7 @@ export default function MenuEditor() {
     
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/admin/menu/restore/${encodeURIComponent(backupId)}`, {
+      const response = await fetch(`/api/admin/menu/restore/${backupId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -11,14 +11,24 @@ async function handler(
   }
   
   try {
-    const { backupId } = req.query
+    const { backupPath } = req.query
     
-    if (!backupId || typeof backupId !== 'string') {
-      return res.status(400).json({ error: 'Backup ID is required' })
+    if (!backupPath || !Array.isArray(backupPath)) {
+      return res.status(400).json({ error: 'Backup path is required' })
     }
     
+    // 重建完整的備份路徑
+    let fullBackupId = backupPath.join('/')
+    
+    // 如果路徑不包含 .json 擴展名，添加它
+    if (!fullBackupId.endsWith('.json')) {
+      fullBackupId += '.json'
+    }
+    
+    console.log('Restoring backup from path:', backupPath, '->', fullBackupId)
+    
     const manager = getR2MenuManager()
-    const result = await manager.restoreBackup(backupId)
+    const result = await manager.restoreBackup(fullBackupId)
     
     return res.status(200).json({
       success: true,

@@ -44,6 +44,7 @@ export class R2MenuManager {
   private async createAwsV4Headers(
     method: string, 
     key: string, 
+    queryString: string = '',
     contentType: string = 'application/json',
     body?: string
   ): Promise<Headers> {
@@ -59,8 +60,8 @@ export class R2MenuManager {
     const payloadHash = body ? await this.sha256(body) : await this.sha256('')
     
     // 準備請求
-    const canonicalUri = `/${this.config.bucketName}/${key}`
-    const canonicalQuerystring = ''
+    const canonicalUri = key ? `/${this.config.bucketName}/${key}` : `/${this.config.bucketName}`
+    const canonicalQuerystring = queryString
     const canonicalHeaders = 
       `host:${this.config.accountId}.r2.cloudflarestorage.com\n` +
       `x-amz-content-sha256:${payloadHash}\n` +
@@ -111,7 +112,7 @@ export class R2MenuManager {
 
   // 獲取當前菜單資料
   async getCurrentMenu(): Promise<MenuData> {
-    const headers = await this.createAwsV4Headers('GET', 'data.json')
+    const headers = await this.createAwsV4Headers('GET', 'data.json', '')
     
     const response = await fetch(
       `${this.endpoint}/${this.config.bucketName}/data.json`,
@@ -144,7 +145,7 @@ export class R2MenuManager {
       if (currentData) {
         const backupKey = `backups/data-${timestamp}.json`
         const backupBody = JSON.stringify(currentData, null, 2)
-        const backupHeaders = await this.createAwsV4Headers('PUT', backupKey, 'application/json', backupBody)
+        const backupHeaders = await this.createAwsV4Headers('PUT', backupKey, '', 'application/json', backupBody)
         
         const backupResponse = await fetch(
           `${this.endpoint}/${this.config.bucketName}/${backupKey}`,
@@ -165,7 +166,7 @@ export class R2MenuManager {
       
       // 4. 保存新資料
       const body = JSON.stringify(menuData, null, 2)
-      const headers = await this.createAwsV4Headers('PUT', 'data.json', 'application/json', body)
+      const headers = await this.createAwsV4Headers('PUT', 'data.json', '', 'application/json', body)
       
       const response = await fetch(
         `${this.endpoint}/${this.config.bucketName}/data.json`,
@@ -189,19 +190,34 @@ export class R2MenuManager {
 
   // 獲取備份列表
   async listBackups(): Promise<Array<{ id: string; timestamp: number; size: number }>> {
-    const headers = await this.createAwsV4Headers('GET', '')
+    // 構造查詢參數 - AWS V4簽名需要特定的編碼格式
+    const params = new URLSearchParams()
+    params.set('list-type', '2')
+    params.set('prefix', 'backups/')
     
-    const url = new URL(`${this.endpoint}/${this.config.bucketName}`)
-    url.searchParams.set('list-type', '2')
-    url.searchParams.set('prefix', 'backups/')
+    // 對於 AWS V4 簽名，查詢字串需要按照字母順序排序
+    const sortedParams = new URLSearchParams()
+    Array.from(params.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([key, value]) => sortedParams.set(key, value))
     
-    const response = await fetch(url.toString(), { headers })
+    const queryString = sortedParams.toString()
+    const headers = await this.createAwsV4Headers('GET', '', queryString)
+    
+    const url = `${this.endpoint}/${this.config.bucketName}?${queryString}`
+    
+    console.log('Listing backups from URL:', url)
+    
+    const response = await fetch(url, { headers })
     
     if (!response.ok) {
-      throw new Error(`Failed to list backups: ${response.status}`)
+      const errorText = await response.text()
+      console.error('List backups failed:', response.status, errorText)
+      throw new Error(`Failed to list backups: ${response.status} - ${errorText}`)
     }
     
     const text = await response.text()
+    console.log('List backups response XML:', text.substring(0, 500) + (text.length > 500 ? '...' : ''))
     
     // 使用正則表達式解析 XML（避免在 Edge Runtime 中使用 DOMParser）
     const keyRegex = /<Key>([^<]+)<\/Key>/g
@@ -235,6 +251,8 @@ export class R2MenuManager {
       })
       .filter(Boolean) as Array<{ id: string; timestamp: number; size: number }>
     
+    console.log('Found backups:', backups.length, backups)
+    
     // 按時間戳排序，最新的在前
     return backups.sort((a, b) => b.timestamp - a.timestamp)
   }
@@ -243,7 +261,7 @@ export class R2MenuManager {
   async restoreBackup(backupId: string): Promise<{ success: boolean }> {
     try {
       // 1. 獲取備份資料
-      const headers = await this.createAwsV4Headers('GET', backupId)
+      const headers = await this.createAwsV4Headers('GET', backupId, '')
       
       const response = await fetch(
         `${this.endpoint}/${this.config.bucketName}/${backupId}`,
@@ -275,7 +293,7 @@ export class R2MenuManager {
         const toDelete = backups.slice(this.MAX_BACKUPS)
         
         for (const backup of toDelete) {
-          const headers = await this.createAwsV4Headers('DELETE', backup.id)
+          const headers = await this.createAwsV4Headers('DELETE', backup.id, '')
           
           await fetch(
             `${this.endpoint}/${this.config.bucketName}/${backup.id}`,
