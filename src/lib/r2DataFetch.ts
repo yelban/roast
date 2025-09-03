@@ -171,10 +171,14 @@ class R2DataFetch {
   // 清除快取
   clearCache(key?: string) {
     if (key) {
-      this.cache.delete(key)
+      const deleted = this.cache.delete(key)
+      console.log(`🗑️ Cache cleared for key: ${key}, deleted: ${deleted}`)
     } else {
+      const size = this.cache.size
       this.cache.clear()
+      console.log(`🗑️ All cache cleared, previous size: ${size}`)
     }
+    console.log(`📊 Current cache size: ${this.cache.size}`)
   }
 }
 
@@ -216,7 +220,10 @@ export async function getTableData() {
 
 // 清除資料快取
 export function clearDataCache(key?: 'data.json' | 'table.json') {
+  console.log(`🔍 clearDataCache called with key: ${key}`)
   if (r2DataInstance) {
     r2DataInstance.clearCache(key)
+  } else {
+    console.log('⚠️ r2DataInstance is null, cache not cleared')
   }
 }

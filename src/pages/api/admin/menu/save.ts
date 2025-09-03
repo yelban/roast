@@ -2,6 +2,7 @@ import type { NextApiResponse } from 'next'
 import { withAuth, AuthenticatedRequest } from '@/lib/auth-middleware'
 import { getR2MenuManager } from '@/lib/r2MenuManager'
 import { MenuData } from '@/types/menu'
+import { clearDataCache } from '@/lib/r2DataFetch'
 
 async function handler(
   req: AuthenticatedRequest,
@@ -25,6 +26,12 @@ async function handler(
     
     const manager = getR2MenuManager()
     const result = await manager.saveMenu(data)
+    
+    // 自動清除記憶體快取，確保後續請求獲取最新資料
+    console.log('🔄 Clearing memory cache after menu save...')
+    clearDataCache('data.json')
+    clearDataCache('table.json')
+    console.log('✅ Memory cache cleared successfully')
     
     return res.status(200).json({
       success: true,

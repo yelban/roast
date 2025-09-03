@@ -247,10 +247,42 @@ export default function Menu({ mode }: MenuProps) {
       
       const protocol = window.location.protocol
       const host = window.location.host
+      
+      // 檢查是否有快取失效標記
+      const cacheInvalidated = localStorage.getItem('menuCacheInvalidated')
+      const shouldForceRevalidate = cacheInvalidated && (Date.now() - parseInt(cacheInvalidated)) < 300000 // 5分鐘內有效
+      
+      console.log('🔍 Cache invalidation check:', {
+        cacheInvalidated,
+        shouldForceRevalidate,
+        timeDiff: cacheInvalidated ? Date.now() - parseInt(cacheInvalidated) : null
+      })
+      
       // 使用時間戳記作為版本號，確保總是獲取最新資料
       const timestamp = Date.now()
       const apiPath = basePath ? `${protocol}//${host}${basePath}/api/menu?v=${timestamp}` : `${protocol}//${host}/api/menu?v=${timestamp}`
-      const response = await fetch(apiPath)
+      
+      const headers: HeadersInit = {}
+      if (shouldForceRevalidate) {
+        // 設置較短的快取時間，強制瀏覽器發送 If-None-Match 請求檢查更新
+        headers['Cache-Control'] = 'max-age=0, must-revalidate'
+        console.log('🔄 Forcing revalidation with must-revalidate header')
+        
+        // 5分鐘後才清除標記
+        if (Date.now() - parseInt(cacheInvalidated) >= 300000) {
+          localStorage.removeItem('menuCacheInvalidated')
+          console.log('🗑️ Cache invalidation flag cleared after 5 minutes')
+        }
+      } else {
+        console.log('📦 Using normal cache behavior')
+        // 清除過期標記
+        if (cacheInvalidated) {
+          localStorage.removeItem('menuCacheInvalidated')
+          console.log('🗑️ Expired cache invalidation flag cleared')
+        }
+      }
+      
+      const response = await fetch(apiPath, { headers })
       const data = await response.json()
       setMenuData(data)
     } catch (error) {

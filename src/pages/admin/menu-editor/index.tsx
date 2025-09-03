@@ -50,16 +50,25 @@ export default function MenuEditor() {
     
     try {
       const token = localStorage.getItem('adminToken')
-      const url = bypassCache 
+      
+      // 檢查是否有快取失效標記
+      const cacheInvalidated = localStorage.getItem('menuCacheInvalidated')
+      const shouldForceRevalidate = bypassCache || (cacheInvalidated && (Date.now() - parseInt(cacheInvalidated)) < 300000) // 5分鐘內有效
+      
+      const url = shouldForceRevalidate 
         ? `/api/admin/menu/current?t=${Date.now()}` 
         : '/api/admin/menu/current'
       
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          ...(bypassCache ? { 'Cache-Control': 'no-cache' } : {})
-        }
-      })
+      const headers: HeadersInit = {
+        'Authorization': `Bearer ${token}`
+      }
+      
+      if (shouldForceRevalidate) {
+        headers['Cache-Control'] = 'max-age=0, must-revalidate'
+        console.log('🔄 Admin: Forcing revalidation with must-revalidate header')
+      }
+      
+      const response = await fetch(url, { headers })
       
       if (!response.ok) {
         if (response.status === 401) {
@@ -97,7 +106,7 @@ export default function MenuEditor() {
     
     fetchMenuData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchMenuData])
+  }, [])
 
   const fetchBackups = async () => {
     try {
@@ -141,6 +150,11 @@ export default function MenuEditor() {
       
       const result = await response.json()
       setSuccessMessage('メニューが正常に保存されました！')
+      
+      // 設置快取失效標記，讓其他頁面下次載入時繞過快取
+      const timestamp = Date.now().toString()
+      localStorage.setItem('menuCacheInvalidated', timestamp)
+      console.log('🏷️ Menu cache invalidated flag set:', timestamp)
       
       // 保存成功後重新載入菜單資料以確保資料同步（繞過快取）
       try {
