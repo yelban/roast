@@ -7,7 +7,6 @@ export default function handler(
 ) {
   const testData = {
     storeName: 'スタミナ苑',
-    storeZone: '足立本店',
     storePhone: '03-3897-0416',
     storeAddress: '東京都足立区鹿浜3-13-4',
     tableNumber: '5',

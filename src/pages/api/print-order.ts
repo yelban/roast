@@ -56,8 +56,6 @@ export default async function handler(
     // 店名固定使用日文
     const storeName = 'スタミナ苑'
 
-    const storeZone = '足立本店'
-    
     const storePhone = '03-3897-0416'
 
     const storeAddress = '東京都足立区鹿浜3-13-4'
@@ -72,7 +70,6 @@ export default async function handler(
     // 使用格式化工具生成收據內容
     const content = generateReceiptContent({
       storeName,
-      storeZone,
       storePhone,
       storeAddress,
       tableNumber,

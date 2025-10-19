@@ -147,7 +147,6 @@ export interface ReceiptItem {
 
 export interface ReceiptData {
   storeName: string
-  storeZone: string
   storePhone: string
   storeAddress: string
   tableNumber?: string
@@ -158,45 +157,121 @@ export interface ReceiptData {
   orderTime: string
 }
 
-export function generateReceiptContent(data: ReceiptData): string {
+/**
+ * 生成單一收據內容（內部函數）
+ */
+function generateSingleReceipt(data: ReceiptData, copyLabel?: string, showNameField: boolean = false): string {
   const lines: string[] = []
-  
+
+  // 聯別標記（如果有）
+  if (copyLabel) {
+    lines.push(`<CB>【${copyLabel}】</CB>`)
+  }
+
   // 店名（置中放大）
   lines.push(`<CB>${data.storeName}</CB>`)
 
-  lines.push(`<C>${data.storeZone} ${data.storeAddress}`)
+  lines.push(`<C>${data.storeAddress}`)
 
-  lines.push(`電話：${data.storePhone}</C>`)
-  
+  lines.push(`電話：${data.storePhone}`)
+
+  lines.push(`事業者登録番号 T9011802022957</C>`)
+
+  // 只在顧客聯（第一聯，無標籤）顯示「領収書」
+  if (!copyLabel) {
+    lines.push(`<CB>領収書</CB>`)
+  }
+
   // 桌號（如果有）
   if (data.tableNumber) {
     lines.push(`テーブル: ${data.tableNumber}`)
   }
-  
+
   // lines.push('') // 空行
-  
+
   // 表頭（手動格式化以確保正確對齊）
   // 品名(4) + 18空白 + 単価(4) + 5空白 + 数量(4) + 1空白 + 金額(4) + 8空白 = 48
   const header = '品名' + ' '.repeat(22) + '単価' + ' '.repeat(4) + '数量' + ' '.repeat(4) + '金額'
   lines.push(header)
   lines.push(formatDivider())
-  
+
   // 商品明細
   data.items.forEach(item => {
     const amount = item.price * item.quantity
     lines.push(formatItemLine(item.name, item.price, item.quantity, amount))
   })
-  
+
   lines.push(formatDivider())
   // lines.push('') // 空行
-  
+
   // 金額彙總（右對齊）
   lines.push(formatRightAlignLine('小計', `￥${formatMoney(data.subtotal)}`))
   lines.push(formatRightAlignLine('內消費税（10%）', `￥${formatMoney(data.tax)}`))
   lines.push(formatRightAlignLine('合計', `￥${formatMoney(data.total)}`))
-  
+
   lines.push('') // 空行
   lines.push(formatRightAlignLine('受付時間', data.orderTime))
-  
+
   return lines.join('\n')
+}
+
+/**
+ * 生成簡化版顧客聯（不含明細）
+ */
+function generateSimplifiedReceipt(data: ReceiptData): string {
+  const lines: string[] = []
+
+  // // 手寫姓名/公司名稱欄位
+  // lines.push('<CB>お名前：________________________________</CB>')
+  // lines.push('') // 空行
+
+  // 店名（置中放大）
+  lines.push(`<CB>${data.storeName}</CB>`)
+
+  lines.push(`<C>${data.storeAddress}`)
+
+  lines.push(`電話：${data.storePhone}`)
+
+  lines.push(`事業者登録番号 T9011802022957</C>`)
+
+  // 桌號（如果有）
+  if (data.tableNumber) {
+    lines.push(`テーブル: ${data.tableNumber}`)
+  }
+
+  lines.push('') // 空行
+  lines.push(formatDivider())
+
+  // 只顯示總金額
+  lines.push(formatRightAlignLine('合計', `￥${formatMoney(data.total)}`))
+
+  lines.push(formatDivider())
+  lines.push('') // 空行
+  lines.push(formatRightAlignLine('受付時間', data.orderTime))
+
+  return lines.join('\n')
+}
+
+/**
+ * 生成三聯收據內容（完整顧客聯 + 店家留存聯 + 簡化顧客聯）
+ */
+export function generateReceiptContent(data: ReceiptData): string {
+  const parts: string[] = []
+
+  // 第一聯：完整顧客聯（含明細，無標籤但有手寫欄位）
+  parts.push(generateSingleReceipt(data, undefined, true))
+
+  // 空行
+  parts.push('\n')
+
+  // 自動切紙
+  parts.push('<CUT>')
+
+  // 空行
+  parts.push('\n')
+
+  // 第二聯：店家留存聯（含明細）
+  parts.push(generateSingleReceipt(data, '店舗控え'))
+
+  return parts.join('\n')
 }
