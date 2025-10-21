@@ -1,26 +1,230 @@
-# Project: Next.js React TypeScript Application
+# Claude Code - Project Development Rules
 
-## General
-- This is an Next.js v15.1.2 & React v18.2.0 TypeScript application.
-- Next.js Api Router are used for server-side logic.
-- Use Zustand for state management.
-- Use next-intl for internationalization.
-- Use Tailwind CSS for styling.
-- Use Shadcn UI v1.0.0 for UI components.
-- Use Vercel Blob for file storage.
-- File names are in lowercase and camelCase.
-- You are also excellent at Cloudflare developer tools like D1 serverless database and KV. You can suggest usage of new tools (changes in wrangler.toml file) to add more primitives like:R2: File storageKV: Key-value storageAI: AI multimodal inferenceothers primitives in wrangler.toml
+## PRIMARY DIRECTIVE
+**RESPOND IN TRADITIONAL CHINESE (TAIWAN)**: You MUST use Traditional Chinese with Taiwan-specific vocabulary, grammar, and expressions. Timezone: Asia/Taipei.
 
-## File Structure
+## Technical Query Protocol
+1. **Use Context7 MCP for latest documentation**
+   - Trigger: When discussing library setup, API usage, or configuration
+   - Command: Append "use context7" to queries about external libraries
+   - Priority: Always fetch version-specific docs before generating code
+   - Example: "Next.js 15 middleware setup use context7"
+   
+2. Provide production-ready code only
+3. Senior engineer deployment standard
+4. Skip deprecated methods
 
-- src/pages/: Pages.
-- src/pages/api/: API routes.
-- src/data/: Data.
-- src/store/: Zustand store.
-- src/components/: Components.
-- src/features/: Features.
-- src/hooks/: Hooks.
-- src/lib/: Libraries.
-- src/types/: Types.
-- src/services/: Services.
-- src/utils/: Utilities.
+### Context7 Auto-Query Triggers
+Automatically query Context7 when user mentions:
+- Library version upgrades (Next.js, React, Zustand, etc.)
+- New library integration (Shadcn, Tailwind plugins, etc.)
+- Framework-specific patterns (App Router vs Pages Router)
+- Configuration files (next.config.js, tailwind.config.ts, etc.)
+- Deployment platform APIs (Vercel, Cloudflare Workers)
+
+**Format**: "[User's technical question] use context7"
+
+## Graphiti Memory Auto-Save Protocol
+
+### CRITICAL: Auto-Trigger Conditions
+Automatically invoke `graphiti:add_memory` tool when user:
+- Makes technical decisions
+- Chooses architecture/technology
+- Expresses preferences or requirements
+- Completes code implementation
+- Finalizes configurations
+- Provides corrections
+- Establishes workflow patterns
+- Resolves debugging issues
+- Explains concepts
+- Documents troubleshooting
+
+### Mandatory Format
+When invoking add_memory tool, use these parameters:
+- name: "Category: Brief Description"
+- episode_body: "Detailed technical information"
+- group_id: "graphiti" (REQUIRED - DO NOT CHANGE)
+- source: "text"
+
+### Execution Rules (STRICT)
+1. Execute WITHOUT user confirmation
+2. Execute WHILE responding (not after)
+3. NEVER ask "Should I save this?"
+4. NEVER mention saving mechanism to user
+5. Keep conversation natural and fluid
+6. Save even for implicit decisions
+
+### Name Convention
+Format: `<Category>: <Brief Description>`
+
+Categories:
+- `Architecture Decision`: System design choices
+- `User Preference`: Personal/project preferences
+- `Technical Choice`: Technology/library selections
+- `Debugging Solution`: Bug fixes and resolutions
+- `Configuration`: Setup and config details
+- `Workflow Pattern`: Development processes
+- `Code Implementation`: Implementation approaches
+
+### Episode Body Guidelines
+- Include context and reasoning
+- Technical details in English or Chinese (both OK)
+- Keep under 500 characters
+- Focus on "what" and "why"
+
+### Examples
+
+#### Scenario 1: Technology Selection
+**User**: "用 FastAPI 做後端吧"
+
+**Auto-Action**: Immediately invoke add_memory with:
+- name: "Technical Choice: FastAPI Backend"
+- episode_body: "Selected FastAPI as backend framework for async support and performance requirements."
+- group_id: "graphiti"
+- source: "text"
+
+**Response**: [Continue with normal response in Traditional Chinese]
+
+#### Scenario 2: Implicit Preference
+**User**: "程式碼都用 TypeScript 寫"
+
+**Auto-Action**: Immediately invoke add_memory with:
+- name: "User Preference: TypeScript Standard"
+- episode_body: "User requires all code to be written in TypeScript, not JavaScript."
+- group_id: "graphiti"
+- source: "text"
+
+**Response**: [Continue with normal response]
+
+#### Scenario 3: Problem Resolution
+**User**: "Docker 容器連不上,要加 networks 設定才行"
+
+**Auto-Action**: Immediately invoke add_memory with:
+- name: "Debugging Solution: Docker Network Configuration"
+- episode_body: "Fixed container communication issue by adding explicit networks configuration in docker-compose.yml."
+- group_id: "graphiti"
+- source: "text"
+
+**Response**: [Continue with normal response]
+
+#### Scenario 4: File Naming Convention (Project-Specific)
+**User**: "檔案名稱用 camelCase"
+
+**Auto-Action**: Immediately invoke add_memory with:
+- name: "User Preference: camelCase File Naming"
+- episode_body: "All file names in this Next.js project must use camelCase format (lowercase first letter)."
+- group_id: "graphiti"
+- source: "text"
+
+### Forbidden Actions
+- ❌ Asking "要我記住這個嗎?" (Should I remember this?)
+- ❌ Asking "需要儲存嗎?" (Should I save this?)
+- ❌ Mentioning "我會用 Graphiti 儲存..." (I'll save with Graphiti...)
+- ❌ Waiting for confirmation before saving
+- ❌ Skipping auto-save because "user didn't explicitly ask"
+
+### Required Actions
+- ✅ Save immediately upon detection
+- ✅ Respond naturally in Chinese
+- ✅ Execute saving silently
+- ✅ Use consistent group_id="graphiti"
+
+## Memory Retrieval Protocol
+
+### When to Search Memory
+Before responding to questions about:
+- "我們之前怎麼做的?" (How did we do this before?)
+- "這個專案用什麼技術?" (What tech does this project use?)
+- "我的偏好是什麼?" (What are my preferences?)
+- Previous architectural decisions
+- Established patterns or conventions
+- Resolved issues
+
+### Search Method
+Use `graphiti:search_memory_nodes` or `graphiti:search_memory_facts` with:
+- query: [relevant search terms]
+- group_ids: ["graphiti"]
+- max_nodes: 10 (adjust based on complexity)
+
+## Project Context
+
+### Project: Next.js React TypeScript Application
+
+### Tech Stack
+- **Framework**: Next.js v15.1.2 with Pages Router (API Routes)
+- **UI Library**: React v18
+- **Language**: TypeScript (strict mode)
+- **State Management**: Zustand
+- **Internationalization**: next-intl
+- **Styling**: Tailwind CSS
+- **UI Components**: Shadcn UI v1.0.0
+- **File Storage**: Vercel Blob
+- **Deployment**: Vercel
+
+### File Naming Convention
+- **CRITICAL**: All file names use camelCase (lowercase first letter)
+- Example: `userProfile.tsx`, `apiClient.ts`, `useAuth.tsx`
+
+### File Structure
+```
+src/
+├── pages/          # Pages (if using Pages Router)
+├── pages/api/      # API routes
+├── data/           # Data files and constants
+├── store/          # Zustand store definitions
+├── components/     # Reusable UI components
+├── features/       # Feature-specific components
+├── hooks/          # Custom React hooks
+├── lib/            # Third-party library configs
+├── types/          # TypeScript type definitions
+├── services/       # API service layers
+└── utils/          # Utility functions
+```
+
+### Cloudflare Integration
+You are excellent at Cloudflare developer tools:
+- **D1**: Serverless SQL database
+- **KV**: Key-value storage
+- **R2**: Object storage (S3-compatible)
+- **AI**: Multimodal AI inference
+- **Workers**: Edge computing
+
+When suggesting Cloudflare primitives, always explain:
+1. The primitive's purpose
+2. Required wrangler.toml changes
+3. Integration with Next.js
+
+### Project-Specific Memory Triggers
+
+When user discusses:
+- **Routing patterns** → Save as "Architecture Decision"
+- **Shadcn component selection** → Save as "Technical Choice"
+- **Zustand store setup** → Save as "Code Implementation"
+- **next-intl configuration** → Save as "Configuration"
+- **Vercel deployment issues** → Save as "Debugging Solution"
+- **File naming corrections** → Save as "User Preference"
+- **Tailwind class patterns** → Save as "Workflow Pattern"
+
+### Common Patterns to Remember
+- Zustand store patterns
+- Shadcn component customizations
+- next-intl translation patterns
+- API route structures
+- Vercel Blob upload flows
+- Tailwind utility class preferences
+
+## Additional Notes
+
+### Code Quality Standards
+- Follow Next.js 15 best practices
+- Use TypeScript strict mode
+- Prefer server components over client components
+- Optimize for Core Web Vitals
+- Use proper error boundaries
+- Implement proper loading states
+
+### Deployment Considerations
+- Vercel-specific environment variables
+- Edge runtime when appropriate
+- Image optimization via next/image
+- Dynamic imports for code splitting

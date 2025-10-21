@@ -1,211 +1,232 @@
-# 活力園多語言菜單系統 - Claude 工作配置
+<!-- TEST_MARKER: 繁體中文_台灣_20251021 -->
 
-## 項目概述
-- **項目名稱**: 活力園 (Stamina-en) 多語言數位菜單系統
-- **技術棧**: Next.js 15 + TypeScript + Tailwind CSS + Vercel
-- **語言**: 日文、繁體中文、簡體中文、英文
-- **核心功能**: 多語言菜單、TTS 語音播放、多層快取、PWA
+# Claude Code - Project Development Rules
 
-## 開發環境命令
+## PRIMARY DIRECTIVE
+**RESPOND IN TRADITIONAL CHINESE (TAIWAN)**: You MUST use Traditional Chinese with Taiwan-specific vocabulary, grammar, and expressions. Timezone: Asia/Taipei.
 
-### 開發服務器
-```bash
-npm run dev              # 啟動開發服務器 (http://localhost:3000)
-npm run dev-https        # 啟動 HTTPS 開發服務器
-```
+## Technical Query Protocol
+1. **Use Context7 MCP for latest documentation**
+   - Trigger: When discussing library setup, API usage, or configuration
+   - Command: Append "use context7" to queries about external libraries
+   - Priority: Always fetch version-specific docs before generating code
+   - Example: "Next.js 15 middleware setup use context7"
+   
+2. Provide production-ready code only
+3. Senior engineer deployment standard
+4. Skip deprecated methods
 
-### 建置與部署
-```bash
-npm run build           # 建置生產版本
-npm run start          # 啟動生產服務器
-npm run lint           # 執行 ESLint 檢查
-```
+### Context7 Auto-Query Triggers
+Automatically query Context7 when user mentions:
+- Library version upgrades (Next.js, React, Zustand, etc.)
+- New library integration (Shadcn, Tailwind plugins, etc.)
+- Framework-specific patterns (App Router vs Pages Router)
+- Configuration files (next.config.js, tailwind.config.ts, etc.)
+- Deployment platform APIs (Vercel, Cloudflare Workers)
 
-### 字體最佳化
-```bash
-npm run generate-subsets  # 生成字體子集檔案
-```
+**Format**: "[User's technical question] use context7"
 
-## 項目結構
+## Graphiti Memory Auto-Save Protocol
 
-### 核心目錄
+### CRITICAL: Auto-Trigger Conditions
+Automatically invoke `graphiti:add_memory` tool when user:
+- Makes technical decisions
+- Chooses architecture/technology
+- Expresses preferences or requirements
+- Completes code implementation
+- Finalizes configurations
+- Provides corrections
+- Establishes workflow patterns
+- Resolves debugging issues
+- Explains concepts
+- Documents troubleshooting
+
+### Mandatory Format
+When invoking add_memory tool, use these parameters:
+- name: "Category: Brief Description"
+- episode_body: "Detailed technical information"
+- group_id: "graphiti" (REQUIRED - DO NOT CHANGE)
+- source: "text"
+
+### Execution Rules (STRICT)
+1. Execute WITHOUT user confirmation
+2. Execute WHILE responding (not after)
+3. NEVER ask "Should I save this?"
+4. NEVER mention saving mechanism to user
+5. Keep conversation natural and fluid
+6. Save even for implicit decisions
+
+### Name Convention
+Format: `<Category>: <Brief Description>`
+
+Categories:
+- `Architecture Decision`: System design choices
+- `User Preference`: Personal/project preferences
+- `Technical Choice`: Technology/library selections
+- `Debugging Solution`: Bug fixes and resolutions
+- `Configuration`: Setup and config details
+- `Workflow Pattern`: Development processes
+- `Code Implementation`: Implementation approaches
+
+### Episode Body Guidelines
+- Include context and reasoning
+- Technical details in English or Chinese (both OK)
+- Keep under 500 characters
+- Focus on "what" and "why"
+
+### Examples
+
+#### Scenario 1: Technology Selection
+**User**: "用 FastAPI 做後端吧"
+
+**Auto-Action**: Immediately invoke add_memory with:
+- name: "Technical Choice: FastAPI Backend"
+- episode_body: "Selected FastAPI as backend framework for async support and performance requirements."
+- group_id: "graphiti"
+- source: "text"
+
+**Response**: [Continue with normal response in Traditional Chinese]
+
+#### Scenario 2: Implicit Preference
+**User**: "程式碼都用 TypeScript 寫"
+
+**Auto-Action**: Immediately invoke add_memory with:
+- name: "User Preference: TypeScript Standard"
+- episode_body: "User requires all code to be written in TypeScript, not JavaScript."
+- group_id: "graphiti"
+- source: "text"
+
+**Response**: [Continue with normal response]
+
+#### Scenario 3: Problem Resolution
+**User**: "Docker 容器連不上,要加 networks 設定才行"
+
+**Auto-Action**: Immediately invoke add_memory with:
+- name: "Debugging Solution: Docker Network Configuration"
+- episode_body: "Fixed container communication issue by adding explicit networks configuration in docker-compose.yml."
+- group_id: "graphiti"
+- source: "text"
+
+**Response**: [Continue with normal response]
+
+#### Scenario 4: File Naming Convention (Project-Specific)
+**User**: "檔案名稱用 camelCase"
+
+**Auto-Action**: Immediately invoke add_memory with:
+- name: "User Preference: camelCase File Naming"
+- episode_body: "All file names in this Next.js project must use camelCase format (lowercase first letter)."
+- group_id: "graphiti"
+- source: "text"
+
+### Forbidden Actions
+- ❌ Asking "要我記住這個嗎?" (Should I remember this?)
+- ❌ Asking "需要儲存嗎?" (Should I save this?)
+- ❌ Mentioning "我會用 Graphiti 儲存..." (I'll save with Graphiti...)
+- ❌ Waiting for confirmation before saving
+- ❌ Skipping auto-save because "user didn't explicitly ask"
+
+### Required Actions
+- ✅ Save immediately upon detection
+- ✅ Respond naturally in Chinese
+- ✅ Execute saving silently
+- ✅ Use consistent group_id="graphiti"
+
+## Memory Retrieval Protocol
+
+### When to Search Memory
+Before responding to questions about:
+- "我們之前怎麼做的?" (How did we do this before?)
+- "這個專案用什麼技術?" (What tech does this project use?)
+- "我的偏好是什麼?" (What are my preferences?)
+- Previous architectural decisions
+- Established patterns or conventions
+- Resolved issues
+
+### Search Method
+Use `graphiti:search_memory_nodes` or `graphiti:search_memory_facts` with:
+- query: [relevant search terms]
+- group_ids: ["graphiti"]
+- max_nodes: 10 (adjust based on complexity)
+
+## Project Context
+
+### Project: Next.js React TypeScript Application
+
+### Tech Stack
+- **Framework**: Next.js v15.1.2 with Pages Router (API Routes)
+- **UI Library**: React v18
+- **Language**: TypeScript (strict mode)
+- **State Management**: Zustand
+- **Internationalization**: next-intl
+- **Styling**: Tailwind CSS
+- **UI Components**: Shadcn UI v1.0.0
+- **File Storage**: Vercel Blob
+- **Deployment**: Vercel
+
+### File Naming Convention
+- **CRITICAL**: All file names use camelCase (lowercase first letter)
+- Example: `userProfile.tsx`, `apiClient.ts`, `useAuth.tsx`
+
+### File Structure
 ```
 src/
-├── components/         # React 組件
-│   ├── ui/            # Shadcn UI 組件
-│   ├── Menu.tsx       # 主菜單組件
-│   ├── FontWrapper.tsx # 字體包裝組件
-│   └── ...
-├── pages/             # Next.js 頁面
-│   ├── api/           # API 路由
-│   │   ├── menu.ts    # 菜單 API
-│   │   └── tts/       # TTS API
-│   ├── _app.tsx       # 應用程式根組件
-│   └── index.tsx      # 首頁
-├── store/             # Zustand 狀態管理
-├── types/             # TypeScript 型別定義
-├── config/            # 配置檔案
-├── lib/               # 工具函數
-└── styles/            # 全局樣式
+├── pages/          # Pages (if using Pages Router)
+├── pages/api/      # API routes
+├── data/           # Data files and constants
+├── store/          # Zustand store definitions
+├── components/     # Reusable UI components
+├── features/       # Feature-specific components
+├── hooks/          # Custom React hooks
+├── lib/            # Third-party library configs
+├── types/          # TypeScript type definitions
+├── services/       # API service layers
+└── utils/          # Utility functions
 ```
 
-### 重要檔案
-- `src/data/data.json` - 菜單資料
-- `src/config/fonts.ts` - 字體配置
-- `src/store/languageStore.ts` - 語言狀態管理
-- `next.config.ts` - Next.js 配置
-- `public/sw.js` - Service Worker
+### Cloudflare Integration
+You are excellent at Cloudflare developer tools:
+- **D1**: Serverless SQL database
+- **KV**: Key-value storage
+- **R2**: Object storage (S3-compatible)
+- **AI**: Multimodal AI inference
+- **Workers**: Edge computing
 
-## 開發規範
+When suggesting Cloudflare primitives, always explain:
+1. The primitive's purpose
+2. Required wrangler.toml changes
+3. Integration with Next.js
 
-### 程式碼風格
-- 使用 TypeScript 嚴格模式
-- 遵循 ESLint 配置
-- 使用 Tailwind CSS 類別
-- 組件使用 PascalCase 命名
-- 檔案使用 camelCase 命名
+### Project-Specific Memory Triggers
 
-### 提交規範
-```bash
-feat: 新增功能
-fix: 修復錯誤
-docs: 文檔更新
-style: 代碼格式
-refactor: 重構
-test: 測試
-chore: 其他
-```
+When user discusses:
+- **Routing patterns** → Save as "Architecture Decision"
+- **Shadcn component selection** → Save as "Technical Choice"
+- **Zustand store setup** → Save as "Code Implementation"
+- **next-intl configuration** → Save as "Configuration"
+- **Vercel deployment issues** → Save as "Debugging Solution"
+- **File naming corrections** → Save as "User Preference"
+- **Tailwind class patterns** → Save as "Workflow Pattern"
 
-## 環境變數
+### Common Patterns to Remember
+- Zustand store patterns
+- Shadcn component customizations
+- next-intl translation patterns
+- API route structures
+- Vercel Blob upload flows
+- Tailwind utility class preferences
 
-### 必要環境變數
-```bash
-# Azure TTS 配置
-AZURE_SPEECH_KEY=your_azure_speech_key
-AZURE_SPEECH_REGION=your_azure_region
+## Additional Notes
 
-# Vercel 配置
-KV_URL=your_vercel_kv_url
-KV_REST_API_URL=your_vercel_kv_rest_api_url
-KV_REST_API_TOKEN=your_vercel_kv_rest_api_token
-KV_REST_API_READ_ONLY_TOKEN=your_vercel_kv_read_only_token
+### Code Quality Standards
+- Follow Next.js 15 best practices
+- Use TypeScript strict mode
+- Prefer server components over client components
+- Optimize for Core Web Vitals
+- Use proper error boundaries
+- Implement proper loading states
 
-# Vercel Blob 配置
-BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
-```
-
-### 可選環境變數
-```bash
-# 快取模式 ('local' | 'blob')
-CACHE_MODE=blob
-
-# 基礎路徑 (用於子目錄部署)
-BASE_PATH=
-
-# 節點環境
-NODE_ENV=development|production
-```
-
-## 技術架構
-
-### 快取策略
-1. **Edge Cache** (Vercel KV) - 第一層快取
-2. **CDN Cache** (Cloudflare) - 第二層快取
-3. **Browser Cache** - 瀏覽器快取
-4. **Service Worker** - 離線快取
-
-### API 端點
-- `GET /api/menu` - 獲取菜單資料
-- `GET /api/tts/[text]` - 獲取 TTS 音訊
-
-### 狀態管理
-- 使用 Zustand 管理全域狀態
-- 語言切換狀態
-- 滑動動畫狀態
-
-## 常見任務
-
-### 更新菜單資料
-1. 編輯 `src/data/data.json`
-2. 確保所有語言都有對應翻譯
-3. 測試各語言顯示
-
-### 添加新語言
-1. 更新 `src/types/menu.ts` 中的 Language 型別
-2. 更新 `src/store/languageStore.ts` 中的語言順序
-3. 更新 `src/config/fonts.ts` 中的字體配置
-4. 更新菜單資料中的翻譯
-
-### 優化效能
-1. 檢查 Lighthouse 報告
-2. 優化圖片大小
-3. 檢查字體載入策略
-4. 監控 Core Web Vitals
-
-## 疑難排解
-
-### 常見問題
-1. **TTS 不工作**: 檢查 Azure 配置和 API 金鑰
-2. **字體載入失敗**: 檢查字體檔案路徑和 CORS 設定
-3. **快取問題**: 清除瀏覽器快取或檢查 Service Worker
-4. **語言切換故障**: 檢查狀態管理和動畫邏輯
-
-### 除錯指令
-```bash
-# 檢查建置輸出
-npm run build -- --debug
-
-# 分析打包大小
-npm run build -- --analyze
-
-# 檢查 TypeScript 錯誤
-npx tsc --noEmit
-```
-
-## 部署說明
-
-### Vercel 部署
-1. 連接 GitHub 儲存庫
-2. 設定環境變數
-3. 部署後檢查功能
-
-### 環境檢查清單
-- [ ] 所有環境變數已設定
-- [ ] TTS API 正常運作
-- [ ] 快取策略生效
-- [ ] 字體檔案可訪問
-- [ ] Service Worker 註冊成功
-
-## 效能監控
-
-### 關鍵指標
-- **LCP (Largest Contentful Paint)**: < 2.5s
-- **FID (First Input Delay)**: < 100ms
-- **CLS (Cumulative Layout Shift)**: < 0.1
-- **快取命中率**: > 95%
-
-### 監控工具
-- Vercel Analytics
-- Lighthouse CI
-- Core Web Vitals
-
-## 維護作業
-
-### 定期檢查
-- [ ] 監控 API 使用量
-- [ ] 檢查快取效率
-- [ ] 更新依賴套件
-- [ ] 審查安全性
-
-### 快取管理
-- TTS 音訊檔案自動快取
-- 菜單資料版本控制
-- 字體檔案長期快取
-
----
-
-**重要提醒**: 
-- 修改菜單資料後需要清除快取
-- TTS 功能需要有效的 Azure 訂閱
-- 字體子集化需要重新生成
-- 部署前務必測試所有語言功能
+### Deployment Considerations
+- Vercel-specific environment variables
+- Edge runtime when appropriate
+- Image optimization via next/image
+- Dynamic imports for code splitting
