@@ -5,15 +5,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
-    // 檢查必要的環境變數
+    // 檢查必要的環境變數（新架構：TTS 由 Azure 合成、R2 為唯一快取後端）
     const requiredEnvs = {
       'AZURE_SPEECH_KEY': process.env.AZURE_SPEECH_KEY,
-      'AZURE_SPEECH_REGION': process.env.AZURE_SPEECH_REGION,
-      'KV_REST_API_URL': process.env.KV_REST_API_URL,
-      'KV_REST_API_TOKEN': process.env.KV_REST_API_TOKEN ? '[REDACTED]' : undefined,
-      'BLOB_STORE_URL': process.env.BLOB_STORE_URL,
-      'BLOB_READ_WRITE_TOKEN': process.env.BLOB_READ_WRITE_TOKEN ? '[REDACTED]' : undefined,
-      'CACHE_MODE': process.env.CACHE_MODE || 'local'
+      'AZURE_SPEECH_REGION': process.env.AZURE_SPEECH_REGION
     }
 
     const missing = Object.entries(requiredEnvs)
