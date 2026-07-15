@@ -1,94 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import fs from 'fs'
-import path from 'path'
 import { generateHash } from '@/lib/utils'
-import { put } from '@vercel/blob'
-import { getCachedAudio, setCachedAudio, checkCacheAvailability } from '@/lib/r2CacheFetch'
+import { getCachedAudio, setCachedAudio } from '@/lib/r2CacheFetch'
 import 'server-only'
-
-// 快取模式設定
-const CACHE_MODE = process.env.CACHE_MODE || 'local' // 'local' | 'blob'
 
 // 生成 hash ID 的函數
 function generateHashId(text: string): string {
   return generateHash(text)
-}
-
-// 本地快取相關函數
-function getCachedAudioPath(hashId: string): string {
-  return path.join(process.cwd(), 'public', 'audio', `${hashId}.mp3`)
-}
-
-function ensureAudioDirectory() {
-  const audioDir = path.join(process.cwd(), 'public', 'audio')
-  if (!fs.existsSync(audioDir)) {
-    fs.mkdirSync(audioDir, { recursive: true })
-  }
-}
-
-// Blob 快取相關函數
-async function setBlobCache(hashId: string, audioBuffer: Buffer) {
-  try {
-    await put(`tts-cache/${hashId}.mp3`, audioBuffer, {
-      access: 'public',
-      addRandomSuffix: false,
-      contentType: 'audio/mpeg'
-    })
-  } catch (error) {
-    console.error('Blob cache set error:', error)
-  }
-}
-
-async function getBlobCache(hashId: string) {
-  try {
-    // 直接返回 Blob URL，避免預先 fetch
-    const blobUrl = `${process.env.BLOB_STORE_URL}/tts-cache/${hashId}.mp3`
-    // 使用 HEAD 請求檢查檔案是否存在
-    const response = await fetch(blobUrl, { method: 'HEAD' })
-    return response.ok ? { url: blobUrl, exists: true } : null
-  } catch (error) {
-    console.error('Blob cache check error:', error)
-    return null
-  }
-}
-
-// 從 Blob 獲取音訊資料
-async function fetchBlobAudio(blobUrl: string): Promise<Buffer> {
-  const response = await fetch(blobUrl)
-  if (!response.ok) throw new Error(`Blob fetch failed: ${response.status}`)
-  const arrayBuffer = await response.arrayBuffer()
-  return Buffer.from(arrayBuffer)
-}
-
-// Edge Cache 已停用，改用 Cloudflare R2
-
-// 舊版本快取介面已移除，現在使用 r2CacheS3 統一介面
-
-// 舊版本 setCachedAudio 已移除，現在使用 r2CacheS3 統一介面
-
-// 快取清理函數
-async function cleanupOldCache() {
-  const maxAge = 30 * 24 * 60 * 60 * 1000 // 30 天
-
-  if (CACHE_MODE === 'local') {
-    const audioDir = path.join(process.cwd(), 'public', 'audio')
-    try {
-      const files = fs.readdirSync(audioDir)
-      const now = Date.now()
-      
-      files.forEach(file => {
-        const filePath = path.join(audioDir, file)
-        const stats = fs.statSync(filePath)
-        
-        if (now - stats.mtimeMs > maxAge) {
-          fs.unlinkSync(filePath)
-        }
-      })
-    } catch (error) {
-      console.error('Cache cleanup error:', error)
-    }
-  }
-  // Vercel Blob 目前沒有直接的清 API，所以移除相關邏輯
 }
 
 const logCacheStatus = (req: NextApiRequest, hashId: string, cacheSource: string) => {
@@ -199,14 +116,7 @@ export default async function handler(
       return;
     }
 
-    // 優先檢查快取可用性 (重導向優化)
-    console.time(`checkCacheAvailability-${hashId}`);
-    const cacheAvailability = await checkCacheAvailability(hashId);
-    console.timeEnd(`checkCacheAvailability-${hashId}`);
-
-    // 注意：客戶端現在會優先直接請求 R2，這裡主要處理回退情況
-
-    // 如果快速檢查失敗，回退到傳統快取檢查（確保向後相容）
+    // 客戶端會優先直接請求 R2，此處走 API 回退：直接查快取
     console.time(`getCachedAudio-${hashId}`);
     const { buffer: cachedAudio, source: cacheSource } = await getCachedAudio(hashId);
     console.timeEnd(`getCachedAudio-${hashId}`);
@@ -277,14 +187,12 @@ export default async function handler(
 
     const audioBuffer = Buffer.from(await ttsResponse.arrayBuffer());
 
-    // 儲存快取 (使用新的 R2 整合介面)
-    console.time(`setCachedAudio-${hashId}`);
-    await setCachedAudio(hashId, audioBuffer, {
+    // 非同步儲存快取（不阻塞回應，使用 R2 整合介面）
+    setCachedAudio(hashId, audioBuffer, {
       text: text,
       generated: new Date().toISOString(),
       source: 'tts-api'
-    });
-    console.timeEnd(`setCachedAudio-${hashId}`);
+    }).catch(error => console.warn('Cache save failed:', error));
 
     // console.log(`🎵 Azure TTS 生成完成:`, audioBuffer.length, 'bytes');
     // console.log(`🕐 總處理時間: ${Date.now() - startTime}ms`);
