@@ -1,6 +1,16 @@
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-should-be-in-env'
+// 優先用 JWT_SECRET；未設時退回 ADMIN_PASSWORD（一定有設、且非公開）。
+// 兩者皆無才拋錯，避免退回公開可見的預設值造成 token 可被偽造。
+function resolveJwtSecret(): string {
+  const secret = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD
+  if (!secret) {
+    throw new Error('JWT_SECRET (或 ADMIN_PASSWORD 作為 fallback) 必須設定')
+  }
+  return secret
+}
+
+const JWT_SECRET = resolveJwtSecret()
 const JWT_EXPIRES_IN = '24h'
 
 export interface JWTPayload {

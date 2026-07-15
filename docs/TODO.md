@@ -2,7 +2,11 @@
 
 ## 安全性
 
-### [ ] JWT_SECRET 不安全的 fallback 預設值（優先）
+### [x] JWT_SECRET 不安全的 fallback 預設值（已修，2026-07-15）
+
+**已修正**：`src/lib/jwt.ts` 改為 `JWT_SECRET || ADMIN_PASSWORD`，兩者皆無則拋錯，移除公開預設值。部署後偽造的預設密鑰 token 即失效。建議另在 Vercel 設定專用強隨機 `JWT_SECRET`（會優先於 ADMIN_PASSWORD fallback）。
+
+<details><summary>原始問題紀錄</summary>
 
 `src/lib/jwt.ts:3`：
 
@@ -17,3 +21,5 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-should-be-in-env'
 **驗收**：未設 `JWT_SECRET` 時，呼叫 `generateToken` / `verifyToken` 應拋錯；Vercel 已設 `JWT_SECRET` 故正式站不受影響。
 
 > 來源：2026-07-15 管理介面 review。`ADMIN_PASSWORD` 與 `JWT_SECRET` 已補進 `.env.example` 與 `docs/local-and-deploy.md`。
+
+</details>
