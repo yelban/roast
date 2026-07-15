@@ -131,7 +131,23 @@ curl https://<你的網址>/api/tts/health    # 檢查 Azure 環境變數與 tok
 
 ---
 
-## 6. 常見問題
+## 6. 管理介面（菜單編輯器）
+
+網址：`/admin/menu-editor`（未登入自動導向 `/admin/menu-editor/login`）。
+
+- **登入**：輸入 `ADMIN_PASSWORD`，成功後發一組 24 小時 JWT 存於瀏覽器 localStorage。
+- **編輯**：新增／編輯／刪除分類與品項、改多語系名稱與價格，用 Tabs 切換分類。
+- **存檔**：寫入 Cloudflare R2，**每次存檔自動建備份**，並即時清除伺服器記憶體快取 → 前台菜單立即更新。
+- **備份／還原**：可列出歷史備份、一鍵還原到某版本。
+
+需要的環境變數（見 `.env.example`）：
+
+```bash
+ADMIN_PASSWORD=<登入密碼>        # 未設 → 登入 API 回 500
+JWT_SECRET=<夠長的隨機字串>       # 未設會 fallback 到原始碼公開預設值（安全風險，見 docs/TODO.md）
+```
+
+## 7. 常見問題
 
 | 症狀 | 可能原因 |
 |------|---------|
