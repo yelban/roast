@@ -238,13 +238,13 @@ export function generateCacheKey(hashId: string, type: 'audio' | 'metadata' = 'a
 // 統一快取介面
 export interface CacheResult {
   buffer: Buffer | null
-  source: 'r2' | 'blob' | 'miss'
+  source: 'r2' | 'miss'
   metadata?: Record<string, string>
 }
 
 // 檢查快取來源介面
 export interface CacheAvailability {
-  source: 'r2' | 'blob' | 'miss'
+  source: 'r2' | 'miss'
   publicUrl?: string  // 如果可用，提供公開 URL
 }
 
@@ -318,8 +318,8 @@ export async function checkCacheAvailability(hashId: string): Promise<CacheAvail
 
 export async function getCachedAudio(hashId: string): Promise<CacheResult> {
   const r2 = getR2Cache()
-  
-  // 1. 嘗試從 R2 獲取
+
+  // 從 R2 獲取（新架構：R2 為唯一快取，讀取與 setCachedAudio 的寫入對稱）
   if (r2) {
     try {
       const key = generateCacheKey(hashId)
@@ -329,26 +329,8 @@ export async function getCachedAudio(hashId: string): Promise<CacheResult> {
         return { buffer, source: 'r2' }
       }
     } catch (error) {
-      console.warn('R2 cache failed, falling back to Blob:', error)
+      console.warn('R2 cache read failed:', error)
     }
-  }
-
-  // 2. 回退到 Vercel Blob
-  try {
-    const blobUrl = `${process.env.BLOB_STORE_URL}/tts-cache/${hashId}.mp3`
-    const response = await fetch(blobUrl, { method: 'HEAD' })
-    
-    if (response.ok) {
-      const audioResponse = await fetch(blobUrl)
-      if (audioResponse.ok) {
-        const arrayBuffer = await audioResponse.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-        console.log('☁️ Blob Cache hit:', hashId, `(${buffer.length} bytes)`)
-        return { buffer, source: 'blob' }
-      }
-    }
-  } catch (error) {
-    console.warn('Blob cache check failed:', error)
   }
 
   return { buffer: null, source: 'miss' }
