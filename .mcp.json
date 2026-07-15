@@ -14,7 +14,17 @@
       "args": [
         "-y",
         "mcp-remote",
-        "https://graphiti.beyondsearchai.com/sse"
+        "--header",
+        "X-Group-ID: roast",
+        "http://127.0.0.1:8001/sse?group_id=roast"
+      ]
+    },
+    "codegraph": {
+      "type": "stdio",
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp"
       ]
     }
   }

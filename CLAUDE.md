@@ -45,7 +45,7 @@ Automatically invoke `graphiti:add_memory` tool when user:
 When invoking add_memory tool, use these parameters:
 - name: "Category: Brief Description"
 - episode_body: "Detailed technical information"
-- group_id: "graphiti" (REQUIRED - DO NOT CHANGE)
+- group_id: "roast" (REQUIRED - DO NOT CHANGE)
 - source: "text"
 
 ### Execution Rules (STRICT)
@@ -82,7 +82,7 @@ Categories:
 **Auto-Action**: Immediately invoke add_memory with:
 - name: "Technical Choice: FastAPI Backend"
 - episode_body: "Selected FastAPI as backend framework for async support and performance requirements."
-- group_id: "graphiti"
+- group_id: "roast"
 - source: "text"
 
 **Response**: [Continue with normal response in Traditional Chinese]
@@ -93,7 +93,7 @@ Categories:
 **Auto-Action**: Immediately invoke add_memory with:
 - name: "User Preference: TypeScript Standard"
 - episode_body: "User requires all code to be written in TypeScript, not JavaScript."
-- group_id: "graphiti"
+- group_id: "roast"
 - source: "text"
 
 **Response**: [Continue with normal response]
@@ -104,7 +104,7 @@ Categories:
 **Auto-Action**: Immediately invoke add_memory with:
 - name: "Debugging Solution: Docker Network Configuration"
 - episode_body: "Fixed container communication issue by adding explicit networks configuration in docker-compose.yml."
-- group_id: "graphiti"
+- group_id: "roast"
 - source: "text"
 
 **Response**: [Continue with normal response]
@@ -115,7 +115,7 @@ Categories:
 **Auto-Action**: Immediately invoke add_memory with:
 - name: "User Preference: camelCase File Naming"
 - episode_body: "All file names in this Next.js project must use camelCase format (lowercase first letter)."
-- group_id: "graphiti"
+- group_id: "roast"
 - source: "text"
 
 ### Forbidden Actions
@@ -129,7 +129,7 @@ Categories:
 - ✅ Save immediately upon detection
 - ✅ Respond naturally in Chinese
 - ✅ Execute saving silently
-- ✅ Use consistent group_id="graphiti"
+- ✅ Use consistent group_id="roast"
 
 ## Memory Retrieval Protocol
 
@@ -145,7 +145,7 @@ Before responding to questions about:
 ### Search Method
 Use `graphiti:search_memory_nodes` or `graphiti:search_memory_facts` with:
 - query: [relevant search terms]
-- group_ids: ["graphiti"]
+- group_ids: ["roast"]
 - max_nodes: 10 (adjust based on complexity)
 
 ## Project Context
@@ -230,3 +230,13 @@ When user discusses:
 - Edge runtime when appropriate
 - Image optimization via next/image
 - Dynamic imports for code splitting
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
